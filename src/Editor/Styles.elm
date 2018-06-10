@@ -36,7 +36,18 @@ styleText =
   position: absolute;
   border-left: 1px solid black;
   left: 0;
-  height: 100%
+  height: 100%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 """
 
