@@ -1,5 +1,6 @@
 module Editor.View exposing (container, line)
 
+import Char
 import Html exposing (Html, Attribute, text)
 import Html.Attributes as Attribute exposing (class)
 
@@ -20,8 +21,24 @@ container attrs =
     Html.div ([ class <| name ++ "-container" ] ++ attrs)
 
 
+nbsp : Char
+nbsp =
+    Char.fromCode 160
+
+
 line : Position -> Int -> String -> Html msg
 line position number rawContent =
+    let
+        content =
+            String.map
+                (\char ->
+                    if char == ' ' then
+                        nbsp
+                    else
+                        char
+                )
+                rawContent
+    in
         Html.div [ class <| name ++ "-line" ] <|
             [ Html.span [ class <| name ++ "-line__number" ]
                 [ text <| toString number ]
