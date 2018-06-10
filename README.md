@@ -21,3 +21,5 @@ elm-text-editor is designed to be an "editor" in the following tree:
       * cursor
       * auto-complete dialog
       * open decorations (in other words, decorations exist in the buffer but are opened by the editor)
+      * selection
+      * line wrap
