@@ -68,4 +68,5 @@ view model =
     div []
         [ Editor.Styles.styles
         , Html.map EditorMsg <| Editor.view model.editor
+        , div [] [ Html.text <| toString model.editor ]
         ]
