@@ -26,9 +26,10 @@ styleText =
 }
 
 .elm-editor-line__content {
+  padding-left: 5px;
 }
 
-.elm-editor-line__content--has-cursor {
+.elm-editor-line__character--has-cursor {
   position: relative;
 }
 

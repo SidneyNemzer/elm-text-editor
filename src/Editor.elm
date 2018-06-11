@@ -39,6 +39,7 @@ type Msg
     | RemoveCharAfter
     | Hover Hover
     | GoToHoveredPosition
+    | GoToPosition Position
     | StartSelecting
     | StopSelecting
 
@@ -178,6 +179,9 @@ update msg (State state) =
                       }
                     , Cmd.none
                     )
+
+                GoToPosition position ->
+                    ( { state | cursor = position }, Cmd.none )
 
                 StartSelecting ->
                     ( { state | selection = SelectingFrom state.hover }
@@ -650,5 +654,8 @@ view (State state) =
         ]
         (state.lines
             |> Array.toList
-            |> List.indexedMap (View.line state.cursor)
+            |> List.indexedMap
+                (\index ->
+                    View.line state.cursor index (Position index >> GoToPosition)
+                )
         )

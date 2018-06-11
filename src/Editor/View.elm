@@ -3,6 +3,7 @@ module Editor.View exposing (container, line)
 import Char
 import Html exposing (Html, Attribute, text)
 import Html.Attributes as Attribute exposing (class)
+import Html.Events as Events
 
 
 type alias Position =
@@ -26,38 +27,63 @@ nbsp =
     Char.fromCode 160
 
 
-line : Position -> Int -> String -> Html msg
-line position number rawContent =
+spaceToNbsp : String -> String
+spaceToNbsp =
+    String.map
+        (\char ->
+            if char == ' ' then
+                nbsp
+            else
+                char
+        )
+
+
+character : Position -> Bool -> msg -> String -> Html msg
+character position hasCursor moveCursorTo content =
+    if hasCursor then
+        Html.span
+            [ class <| name ++ "-line__character--has-cursor"
+            , Events.onClick moveCursorTo
+            ]
+            [ text <| spaceToNbsp content
+            , Html.span [ class <| name ++ "-cursor" ] [ text " " ]
+            ]
+    else
+        Html.span
+            [ class <| name ++ "-line__character"
+            , Events.onClick moveCursorTo
+            ]
+            [ text <| spaceToNbsp content ]
+
+
+line : Position -> Int -> (Int -> msg) -> String -> Html msg
+line cursor number moveCursorTo content =
     let
-        content =
-            String.map
-                (\char ->
-                    if char == ' ' then
-                        nbsp
-                    else
-                        char
-                )
-                rawContent
+        positionedCharacter index =
+            character
+                { line = number, column = index }
+                (cursor.line == number && cursor.column == index)
+                (moveCursorTo index)
     in
         Html.div [ class <| name ++ "-line" ] <|
             [ Html.span [ class <| name ++ "-line__number" ]
                 [ text <| toString number ]
+            , Html.span [ class <| name ++ "-line__content" ]
+                (content
+                    |> String.split ""
+                    |> List.indexedMap positionedCharacter
+                )
             ]
-                ++ if position.line == number then
-                    [ Html.span [] [ text <| String.slice 0 position.column content ]
-                    , Html.span [ class <| name ++ "-line__content--has-cursor" ]
-                        [ text <| String.slice position.column (position.column + 1) content
+                ++ if
+                    cursor.line
+                        == number
+                        && cursor.column
+                        >= String.length content
+                   then
+                    [ Html.span [ class <| name ++ "-line__character--has-cursor" ]
+                        [ text " "
                         , Html.span [ class <| name ++ "-cursor" ] [ text " " ]
-                        ]
-                    , Html.span []
-                        [ text <|
-                            String.slice
-                                (position.column + 1)
-                                (String.length content)
-                                content
                         ]
                     ]
                    else
-                    [ Html.span [ class <| name ++ "-line__content" ]
-                        [ text content ]
-                    ]
+                    []
