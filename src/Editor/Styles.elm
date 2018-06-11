@@ -37,7 +37,7 @@ styleText =
   border-left: 1px solid black;
   left: 0;
   height: 100%;
-  animation: blink 1s infinite;
+  animation: blink 0.5s infinite alternate;
 }
 
 @keyframes blink {
