@@ -32,6 +32,7 @@ styleText =
 
 .elm-editor-line__content {
   padding-left: 5px;
+  cursor: default;
 }
 
 .elm-editor-line__character--has-cursor {
