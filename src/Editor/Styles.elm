@@ -17,6 +17,10 @@ styleText =
   width: 700px;
 }
 
+.elm-editor-line {
+  cursor: text;
+}
+
 .elm-editor-line__number {
   display: inline-block;
   width: 20px;
