@@ -4,6 +4,7 @@ import Char
 import Html exposing (Html, Attribute, text)
 import Html.Attributes as Attribute exposing (class)
 import Html.Events as Events
+import Json.Decode as Decode
 
 
 type alias Position =
@@ -38,22 +39,32 @@ spaceToNbsp =
         )
 
 
+captureOnClick : msg -> Attribute msg
+captureOnClick msg =
+    Events.onWithOptions
+        "click"
+        { stopPropagation = True
+        , preventDefault = True
+        }
+        (Decode.succeed msg)
+
+
 character : Position -> Bool -> msg -> String -> Html msg
 character position hasCursor moveCursorTo content =
-    if hasCursor then
+    let
+        ( cursor, cursorClass ) =
+            if hasCursor then
+                ( Html.span [ class <| name ++ "-cursor" ] [ text " " ]
+                , "--has-cursor"
+                )
+            else
+                ( text "", "" )
+    in
         Html.span
-            [ class <| name ++ "-line__character--has-cursor"
-            , Events.onClick moveCursorTo
+            [ class <| name ++ "-line__character" ++ cursorClass
+            , captureOnClick moveCursorTo
             ]
-            [ text <| spaceToNbsp content
-            , Html.span [ class <| name ++ "-cursor" ] [ text " " ]
-            ]
-    else
-        Html.span
-            [ class <| name ++ "-line__character"
-            , Events.onClick moveCursorTo
-            ]
-            [ text <| spaceToNbsp content ]
+            [ text <| spaceToNbsp content, cursor ]
 
 
 line : Position -> Int -> (Int -> msg) -> String -> Html msg
@@ -65,8 +76,15 @@ line cursor number moveCursorTo content =
                 (cursor.line == number && cursor.column == index)
                 (moveCursorTo index)
     in
-        Html.div [ class <| name ++ "-line" ] <|
-            [ Html.span [ class <| name ++ "-line__number" ]
+        Html.div
+            [ class <| name ++ "-line"
+            , captureOnClick <| moveCursorTo <| String.length content
+            ]
+        <|
+            [ Html.span
+                [ class <| name ++ "-line__number"
+                , captureOnClick <| moveCursorTo 0
+                ]
                 [ text <| toString number ]
             , Html.span [ class <| name ++ "-line__content" ]
                 (content
