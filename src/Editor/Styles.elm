@@ -15,6 +15,7 @@ styleText =
   font-family: monospace;
   border: 1px solid lightgray;
   width: 700px;
+  user-select: none;
 }
 
 .elm-editor-line {
