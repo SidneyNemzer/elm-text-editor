@@ -26,12 +26,9 @@ styleText =
   display: inline-block;
   width: 20px;
   padding-right: 5px;
+  margin-right: 5px;
   text-align: right;
   background-color: lightgray;
-}
-
-.elm-editor-line__content {
-  padding-left: 5px;
   cursor: default;
 }
 
