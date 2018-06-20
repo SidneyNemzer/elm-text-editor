@@ -1,16 +1,13 @@
-module Editor.View exposing (container, line)
+module Editor.View exposing (view)
 
+import Array.Hamt as Array exposing (Array)
 import Char
-import Html exposing (Html, Attribute, text)
+import Html exposing (Html, Attribute, text, div, span)
 import Html.Attributes as Attribute exposing (class)
 import Html.Events as Events
 import Json.Decode as Decode
-
-
-type alias Position =
-    { line : Int
-    , column : Int
-    }
+import Editor.Types exposing (Position, Msg(..), Hover(..), InternalState, Selection(..))
+import Editor.Keymap exposing (keyDecoder)
 
 
 name : String
@@ -18,9 +15,12 @@ name =
     "elm-editor"
 
 
-container : List (Attribute msg) -> List (Html msg) -> Html msg
-container attrs =
-    Html.div ([ class <| name ++ "-container" ] ++ attrs)
+captureClick : msg -> Attribute msg
+captureClick msg =
+    Events.onWithOptions
+        "click"
+        { stopPropagation = True, preventDefault = True }
+        (Decode.succeed msg)
 
 
 nbsp : Char
@@ -39,54 +39,55 @@ spaceToNbsp =
         )
 
 
-captureOnClick : msg -> Attribute msg
-captureOnClick msg =
+captureHover : msg -> Attribute msg
+captureHover msg =
     Events.onWithOptions
-        "click"
-        { stopPropagation = True
-        , preventDefault = True
-        }
+        "mouseover"
+        { stopPropagation = True, preventDefault = True }
         (Decode.succeed msg)
 
 
-character : Position -> Bool -> msg -> String -> Html msg
-character position hasCursor moveCursorTo content =
+character : Bool -> Bool -> msg -> String -> Html msg
+character selected hasCursor onHover content =
     let
         ( cursor, cursorClass ) =
             if hasCursor then
-                ( Html.span [ class <| name ++ "-cursor" ] [ text " " ]
+                ( span [ class <| name ++ "-cursor" ] [ text " " ]
                 , "--has-cursor"
                 )
             else
                 ( text "", "" )
     in
-        Html.span
+        span
             [ class <| name ++ "-line__character" ++ cursorClass
-            , captureOnClick moveCursorTo
+            , captureHover onHover
             ]
             [ text <| spaceToNbsp content, cursor ]
 
 
-line : Position -> Int -> (Int -> msg) -> String -> Html msg
-line cursor number moveCursorTo content =
+line : Position -> Int -> String -> Html Msg
+line cursor number content =
     let
-        positionedCharacter index =
+        onHoverChar column =
+            Hover <| HoverChar <| { line = number, column = column }
+
+        positionedCharacter column =
             character
-                { line = number, column = index }
-                (cursor.line == number && cursor.column == index)
-                (moveCursorTo index)
+                False
+                (cursor.line == number && cursor.column == column)
+                (onHoverChar column)
     in
-        Html.div
+        div
             [ class <| name ++ "-line"
-            , captureOnClick <| moveCursorTo <| String.length content
+            , captureHover (HoverLine number |> Hover)
             ]
         <|
-            [ Html.span
+            [ span
                 [ class <| name ++ "-line__number"
-                , captureOnClick <| moveCursorTo 0
+                , captureHover <| onHoverChar 0
                 ]
                 [ text <| toString number ]
-            , Html.span [ class <| name ++ "-line__content" ]
+            , span [ class <| name ++ "-line__content" ]
                 (content
                     |> String.split ""
                     |> List.indexedMap positionedCharacter
@@ -98,10 +99,26 @@ line cursor number moveCursorTo content =
                         && cursor.column
                         >= String.length content
                    then
-                    [ Html.span [ class <| name ++ "-line__character--has-cursor" ]
+                    [ span [ class <| name ++ "-line__character--has-cursor" ]
                         [ text " "
                         , Html.span [ class <| name ++ "-cursor" ] [ text " " ]
                         ]
                     ]
                    else
                     []
+
+
+view : InternalState -> Html Msg
+view state =
+    div
+        [ class <| name ++ "-container"
+        , Events.on "keydown" keyDecoder
+        , Events.onMouseDown StartSelecting
+        , Events.onMouseUp StopSelecting
+        , Events.onMouseOut (Hover NoHover)
+        , Attribute.tabindex 0
+        ]
+        (state.lines
+            |> Array.toList
+            |> List.indexedMap (line state.cursor)
+        )

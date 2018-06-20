@@ -2,54 +2,12 @@ module Editor exposing (State, Msg, init, update, view)
 
 import Array.Hamt as Array exposing (Array)
 import Html exposing (Html)
-import Html.Attributes as Attribute
-import Html.Events as Events
-import Json.Decode as Decode exposing (Decoder)
-import Editor.View as View
+import Editor.Types exposing (Hover(..), Selection(..), Position, Msg(..), InternalState)
+import Editor.View
 
 
-type Hover
-    = NoHover
-    | HoverLine Int
-    | HoverChar Position
-
-
-type Selection
-    = NoSelection
-    | SelectingFrom Hover
-    | SelectedChar Position
-    | Selection Position Position
-
-
-type alias Position =
-    { line : Int
-    , column : Int
-    }
-
-
-type Msg
-    = NoOp
-    | MoveUp
-    | MoveDown
-    | MoveLeft
-    | MoveRight
-    | NewLine
-    | InsertChar Char
-    | RemoveCharBefore
-    | RemoveCharAfter
-    | Hover Hover
-    | GoToHoveredPosition
-    | GoToPosition Position
-    | StartSelecting
-    | StopSelecting
-
-
-type alias InternalState =
-    { lines : Array String
-    , cursor : Position
-    , hover : Hover
-    , selection : Selection
-    }
+type alias Msg =
+    Editor.Types.Msg
 
 
 type State
@@ -64,45 +22,6 @@ init content =
         , hover = NoHover
         , selection = NoSelection
         }
-
-
-keyDecoder : Decoder Msg
-keyDecoder =
-    Decode.field "key" Decode.string
-        |> Decode.andThen keyToMsg
-
-
-keyToMsg : String -> Decoder Msg
-keyToMsg string =
-    case String.uncons string of
-        Just ( char, "" ) ->
-            Decode.succeed (InsertChar char)
-
-        _ ->
-            case string of
-                "ArrowUp" ->
-                    Decode.succeed MoveUp
-
-                "ArrowDown" ->
-                    Decode.succeed MoveDown
-
-                "ArrowLeft" ->
-                    Decode.succeed MoveLeft
-
-                "ArrowRight" ->
-                    Decode.succeed MoveRight
-
-                "Backspace" ->
-                    Decode.succeed RemoveCharBefore
-
-                "Delete" ->
-                    Decode.succeed RemoveCharAfter
-
-                "Enter" ->
-                    Decode.succeed NewLine
-
-                _ ->
-                    Decode.fail "This key does nothing"
 
 
 update : Msg -> State -> ( State, Cmd Msg )
@@ -157,14 +76,9 @@ update msg (State state) =
                     )
 
                 Hover hover ->
-                    ( { state | hover = hover }
-                        |> sanitizeHover
-                    , Cmd.none
-                    )
-
-                GoToHoveredPosition ->
                     ( { state
-                        | cursor =
+                        | hover = hover
+                        , cursor =
                             case state.hover of
                                 NoHover ->
                                     state.cursor
@@ -177,6 +91,7 @@ update msg (State state) =
                                 HoverChar position ->
                                     position
                       }
+                        |> sanitizeHover
                     , Cmd.none
                     )
 
@@ -189,7 +104,6 @@ update msg (State state) =
                     )
 
                 StopSelecting ->
-                    -- Selection for all other
                     let
                         endHover =
                             state.hover
@@ -201,22 +115,11 @@ update msg (State state) =
 
                                 SelectingFrom startHover ->
                                     if startHover == endHover then
-                                        case startHover of
-                                            NoHover ->
-                                                NoSelection
-
-                                            HoverLine _ ->
-                                                NoSelection
-
-                                            HoverChar position ->
-                                                SelectedChar position
+                                        NoSelection
                                     else
                                         hoversToPositions state.lines startHover endHover
                                             |> Maybe.map (\( from, to ) -> Selection from to)
                                             |> Maybe.withDefault NoSelection
-
-                                SelectedChar _ ->
-                                    NoSelection
 
                                 Selection _ _ ->
                                     NoSelection
@@ -648,14 +551,4 @@ lineLength lines lineNum =
 
 view : State -> Html Msg
 view (State state) =
-    View.container
-        [ Events.on "keydown" keyDecoder
-        , Attribute.tabindex 0
-        ]
-        (state.lines
-            |> Array.toList
-            |> List.indexedMap
-                (\index ->
-                    View.line state.cursor index (Position index >> GoToPosition)
-                )
-        )
+    Editor.View.view state
