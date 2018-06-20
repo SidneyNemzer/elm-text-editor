@@ -1,13 +1,9 @@
 module Editor exposing (State, init, view)
 
 import Html exposing (Html)
-import Editor.View as View
-
-
-type alias InternalState =
-    { scroll : Int
-    , cursor : ( Int, Int )
-    }
+import Editor.Model exposing (InternalState, Position)
+import Editor.Update exposing (Msg)
+import Editor.View
 
 
 type State
@@ -16,10 +12,13 @@ type State
 
 init : State
 init =
-    State { scroll = 0, cursor = ( 3, 0 ) }
+    State
+        { scrolledLine = 0
+        , cursor = Position 0 0
+        , selection = Nothing
+        }
 
 
 view : List String -> State -> Html msg
 view lines (State state) =
-    View.container [] <|
-        List.indexedMap (View.line state.cursor) lines
+    Editor.View.view lines state
