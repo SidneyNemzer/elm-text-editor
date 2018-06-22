@@ -12,6 +12,35 @@ name =
     "elm-editor"
 
 
+between : Int -> Int -> Int -> Bool
+between start end point =
+    if start > end then
+        between end start point
+    else if start == end then
+        start == point
+    else
+        point >= start && point <= end
+
+
+selected : Position -> Maybe Position -> Position -> Bool
+selected cursor maybeSelection { line, column } =
+    Maybe.map
+        (\selection ->
+            if cursor.line == selection.line then
+                line
+                    == cursor.line
+                    && between cursor.column selection.column column
+            else if cursor.line == line then
+                between 1 cursor.column column
+            else if selection.line == line then
+                between 1 selection.column column
+            else
+                between cursor.line selection.line line
+        )
+        maybeSelection
+        |> Maybe.withDefault False
+
+
 nbsp : Char
 nbsp =
     Char.fromCode 160
@@ -35,6 +64,9 @@ character cursor selection position char =
             [ classList
                 [ ( name ++ "-line__character", True )
                 , ( name ++ "-line__character--has-cursor", hasCursor )
+                , ( name ++ "-line__character--selected"
+                  , selected cursor selection position
+                  )
                 ]
             ]
             [ text <| String.fromChar <| ensureNbsp char
