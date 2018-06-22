@@ -36,6 +36,8 @@ styleText =
   position: relative;
 }
 
+.elm-editor-line__character--selected {
+  background-color: gray;
 }
 
 .elm-editor-cursor {
