@@ -22,13 +22,18 @@ main =
 -- INIT
 
 
+type alias Model =
+    { content : String
+    , editor : Editor.State
+    }
+
+
 init : ( Model, Cmd Msg )
 init =
-    { content = "Test" } ! []
-
-
-type alias Model =
-    { content : String }
+    { content = "Test"
+    , editor = Editor.init
+    }
+        ! []
 
 
 
@@ -37,6 +42,7 @@ type alias Model =
 
 type Msg
     = SetContent String
+    | EditorMsg Editor.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -44,6 +50,13 @@ update msg model =
     case msg of
         SetContent content ->
             { model | content = content } ! []
+
+        EditorMsg msg_ ->
+            let
+                ( editor, cmd ) =
+                    Editor.update msg_ model.editor
+            in
+                { model | editor = editor } ! [ Cmd.map EditorMsg cmd ]
 
 
 
@@ -64,6 +77,7 @@ view model =
     div []
         [ Editor.Styles.styles
         , div [] [ textarea [ value model.content, onInput SetContent ] [] ]
-        , Editor.init
+        , model.editor
             |> Editor.view (Buffer.init model.content |> Buffer.lines)
+            |> Html.map EditorMsg
         ]
