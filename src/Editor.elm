@@ -23,11 +23,11 @@ init =
         }
 
 
-view : List String -> State -> Html msg
 update : Msg -> State -> ( State, Cmd Msg )
 update msg (State state) =
     Editor.Update.update msg state |> Tuple.mapFirst State
 
 
+view : List String -> State -> Html Msg
 view lines (State state) =
     Editor.View.view lines state
