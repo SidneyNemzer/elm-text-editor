@@ -37,7 +37,8 @@ styleText =
 }
 
 .elm-editor-line__character--selected {
-  background-color: gray;
+  background-color: cornflowerblue;
+  color: white;
 }
 
 .elm-editor-cursor {
