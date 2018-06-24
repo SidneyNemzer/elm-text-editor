@@ -46,7 +46,7 @@ styleText =
   border-left: 2px solid black;
   left: 0;
   height: 100%;
-  animation: blink 0.5s infinite alternate;
+  animation: blink 0.5s infinite alternate steps(2, start);
 }
 
 @keyframes blink {
