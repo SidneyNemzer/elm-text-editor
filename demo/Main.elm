@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (div, textarea)
+import Html exposing (div, textarea, text)
 import Html.Attributes exposing (value)
 import Html.Events exposing (onInput)
 import Editor
@@ -80,4 +80,5 @@ view model =
         , model.editor
             |> Editor.view (Buffer.init model.content |> Buffer.lines)
             |> Html.map EditorMsg
+        , div [] [ text <| toString model.editor ]
         ]
