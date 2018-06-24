@@ -50,7 +50,7 @@ styleText =
 }
 
 @keyframes blink {
-  100% {
+  to {
     opacity: 0;
   }
 }
