@@ -17,28 +17,31 @@ between : Int -> Int -> Int -> Bool
 between start end point =
     if start > end then
         between end start point
-    else if start == end then
-        start == point
     else
-        point >= start && point <= end
+        (start /= end)
+            && (point >= start)
+            && (point < end)
+
+
+betweenPositions : Position -> Position -> Position -> Bool
+betweenPositions start end ({ line, column } as position) =
+    if start.line > end.line then
+        betweenPositions end start position
+    else if start.line == end.line then
+        (line == start.line)
+            && between start.column end.column column
+    else if start.line == line then
+        column >= start.column
+    else if end.line == line then
+        column < end.column
+    else
+        between start.line end.line line
 
 
 selected : Position -> Maybe Position -> Position -> Bool
-selected cursor maybeSelection { line, column } =
-    Maybe.map
-        (\selection ->
-            if cursor.line == selection.line then
-                line
-                    == cursor.line
-                    && between cursor.column selection.column column
-            else if cursor.line == line then
-                between 1 cursor.column column
-            else if selection.line == line then
-                between 1 selection.column column
-            else
-                between cursor.line selection.line line
-        )
-        maybeSelection
+selected cursor maybeSelection character =
+    maybeSelection
+        |> Maybe.map (\selection -> betweenPositions cursor selection character)
         |> Maybe.withDefault False
 
 
