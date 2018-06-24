@@ -30,7 +30,12 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    { content = "Test"
+    { content = """Testsdfasdfa
+abcdabasdfaa
+acbsdfasdfdf
+asdfasdfasdf
+asdfasdfasda
+asdfasdfasda"""
     , editor = Editor.init
     }
         ! []
