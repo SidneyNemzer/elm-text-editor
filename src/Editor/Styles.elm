@@ -43,7 +43,7 @@ styleText =
 
 .elm-editor-cursor {
   position: absolute;
-  border-left: 1px solid black;
+  border-left: 2px solid black;
   left: 0;
   height: 100%;
   animation: blink 0.5s infinite alternate;
