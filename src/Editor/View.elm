@@ -72,7 +72,7 @@ character cursor selection position char =
                   , selected cursor selection position
                   )
                 ]
-            , Event.onMouseDown (MoveCursorTo position)
+            , Event.onMouseDown (CursorTo position)
             ]
             [ text <| String.fromChar <| ensureNbsp char
             , if hasCursor then
