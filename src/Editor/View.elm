@@ -94,6 +94,19 @@ line cursor selection number content =
                 |> List.indexedMap
                     (character cursor selection << Position number)
             )
+        , if
+            (cursor.line == number)
+                && (cursor.column >= String.length content)
+          then
+            span
+                [ class <| name ++ "-line__character"
+                , class <| name ++ "-line__character--has-cursor"
+                ]
+                [ text " "
+                , Html.span [ class <| name ++ "-cursor" ] [ text " " ]
+                ]
+          else
+            text ""
         ]
 
 
