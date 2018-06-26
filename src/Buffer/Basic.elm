@@ -1,4 +1,4 @@
-module Buffer.Basic exposing (Buffer, init, lines, insert)
+module Buffer.Basic exposing (Buffer, init, lines, insert, toString)
 
 import List.Extra
 import String.Extra
@@ -35,3 +35,8 @@ insert { line, column } string (Buffer buffer) =
 lines : Buffer -> List String
 lines (Buffer content) =
     String.split "\n" content
+
+
+toString : Buffer -> String
+toString (Buffer buffer) =
+    buffer
