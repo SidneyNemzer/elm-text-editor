@@ -26,10 +26,13 @@ styleText =
   display: inline-block;
   width: 20px;
   padding-right: 5px;
-  margin-right: 5px;
   text-align: right;
   background-color: lightgray;
   cursor: default;
+}
+
+.elm-editor-line__gutter-padding {
+  width: 5px;
 }
 
 .elm-editor-line__character--has-cursor {
