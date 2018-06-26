@@ -5,7 +5,7 @@ import Html.Attributes exposing (value)
 import Html.Events exposing (onInput)
 import Editor
 import Editor.Styles
-import Buffer.Basic as Buffer
+import Buffer.Basic as Buffer exposing (Buffer)
 
 
 main : Program Never Model Msg
@@ -23,14 +23,14 @@ main =
 
 
 type alias Model =
-    { content : String
+    { content : Buffer
     , editor : Editor.State
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    { content = """Testsdfasdfa
+    { content = Buffer.init """Testsdfasdfa
 abcdabasdfaa
 acbsdfasdfdf
 asdfasdfasdf
@@ -54,12 +54,15 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SetContent content ->
-            { model | content = content } ! []
+            { model | content = Buffer.init content } ! []
 
         EditorMsg msg_ ->
             let
                 ( editor, cmd ) =
-                    Editor.update msg_ model.editor
+                    Editor.update
+                        (Buffer.lines model.content)
+                        msg_
+                        model.editor
             in
                 { model | editor = editor } ! [ Cmd.map EditorMsg cmd ]
 
@@ -81,9 +84,13 @@ view : Model -> Html.Html Msg
 view model =
     div []
         [ Editor.Styles.styles
-        , div [] [ textarea [ value model.content, onInput SetContent ] [] ]
+        , div []
+            [ textarea
+                [ value <| Buffer.toString model.content, onInput SetContent ]
+                []
+            ]
         , model.editor
-            |> Editor.view (Buffer.init model.content |> Buffer.lines)
+            |> Editor.view (Buffer.lines model.content)
             |> Html.map EditorMsg
         , div [] [ text <| toString model.editor ]
         ]

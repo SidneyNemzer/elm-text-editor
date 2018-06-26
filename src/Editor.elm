@@ -1,5 +1,6 @@
 module Editor exposing (State, Msg, init, update, view)
 
+import Array
 import Html exposing (Html)
 import Editor.Model exposing (InternalState, Position)
 import Editor.Update
@@ -23,9 +24,10 @@ init =
         }
 
 
-update : Msg -> State -> ( State, Cmd Msg )
-update msg (State state) =
-    Editor.Update.update msg state |> Tuple.mapFirst State
+update : List String -> Msg -> State -> ( State, Cmd Msg )
+update lines msg (State state) =
+    Editor.Update.update (Array.fromList lines) msg state
+        |> Tuple.mapFirst State
 
 
 view : List String -> State -> Html Msg

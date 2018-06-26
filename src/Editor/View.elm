@@ -6,6 +6,7 @@ import Html.Attributes as Attribute exposing (class, classList)
 import Html.Events as Event
 import Editor.Model exposing (Position, InternalState)
 import Editor.Update exposing (Msg(..))
+import Editor.Keymap
 
 
 name : String
@@ -98,5 +99,10 @@ line cursor selection number content =
 
 view : List String -> InternalState -> Html Msg
 view lines state =
-    div [ class <| name ++ "-container" ] <|
+    div
+        [ class <| name ++ "-container"
+        , Event.on "keydown" Editor.Keymap.decoder
+        , Attribute.tabindex 0
+        ]
+    <|
         List.indexedMap (line state.cursor state.selection) lines
