@@ -75,7 +75,7 @@ clampPosition lines position =
             Nothing ->
                 case arrayLast lines of
                     Just ( line, number ) ->
-                        Position number (String.length line - 1)
+                        Position number (String.length line)
 
                     Nothing ->
                         Position 0 0
