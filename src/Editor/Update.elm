@@ -5,7 +5,7 @@ import Editor.Model exposing (InternalState, Position)
 
 
 type Msg
-    = CursorTo Position
+    = MouseDown Position
     | CursorLeft
     | CursorRight
     | CursorUp
@@ -15,8 +15,8 @@ type Msg
 update : Array String -> Msg -> InternalState -> ( InternalState, Cmd Msg )
 update lines msg state =
     case msg of
-        CursorTo position ->
             ( { state | cursor = position }, Cmd.none )
+        MouseDown position ->
 
         CursorLeft ->
             ( { state | cursor = movePositionLeft 1 lines state.cursor }

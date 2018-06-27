@@ -82,7 +82,7 @@ character cursor selection position char =
                   , selected cursor selection position
                   )
                 ]
-            , captureOnMouseDown (CursorTo position)
+            , captureOnMouseDown (MouseDown position)
             ]
             [ text <| String.fromChar <| ensureNbsp char
             , if hasCursor then
@@ -103,16 +103,16 @@ line cursor selection number content =
     in
         div
             [ class <| name ++ "-line"
-            , captureOnMouseDown (CursorTo end)
+            , captureOnMouseDown (MouseDown end)
             ]
             [ span
                 [ class <| name ++ "-line__number"
-                , captureOnMouseDown (CursorTo start)
+                , captureOnMouseDown (MouseDown start)
                 ]
                 [ text <| toString number ]
             , span
                 [ class <| name ++ "-line__gutter-padding"
-                , captureOnMouseDown (CursorTo start)
+                , captureOnMouseDown (MouseDown start)
                 ]
                 [ text " " ]
             , span [ class <| name ++ "-line__content" ]
