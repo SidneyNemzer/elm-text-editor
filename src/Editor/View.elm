@@ -64,9 +64,7 @@ captureOnMouseDown : Msg -> Attribute Msg
 captureOnMouseDown msg =
     Event.onWithOptions
         "mousedown"
-        { preventDefault = False
-        , stopPropagation = True
-        }
+        { preventDefault = False, stopPropagation = True }
         (Decode.succeed msg)
 
 
