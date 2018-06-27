@@ -6,6 +6,8 @@ import Editor.Model exposing (InternalState, Position)
 
 type Msg
     = MouseDown Position
+    | MouseOver Position
+    | MouseUp
     | CursorLeft
     | CursorRight
     | CursorUp
@@ -15,8 +17,34 @@ type Msg
 update : Array String -> Msg -> InternalState -> ( InternalState, Cmd Msg )
 update lines msg state =
     case msg of
-            ( { state | cursor = position }, Cmd.none )
         MouseDown position ->
+            ( { state
+                | cursor = position
+                , dragging = True
+                , selection = Nothing
+              }
+            , Cmd.none
+            )
+
+        MouseOver position ->
+            if state.dragging then
+                ( { state
+                    | selection =
+                        case state.selection of
+                            Just position ->
+                                Just position
+
+                            Nothing ->
+                                Just state.cursor
+                    , cursor = position
+                  }
+                , Cmd.none
+                )
+            else
+                state ! []
+
+        MouseUp ->
+            ( { state | dragging = False }, Cmd.none )
 
         CursorLeft ->
             ( { state | cursor = movePositionLeft 1 lines state.cursor }

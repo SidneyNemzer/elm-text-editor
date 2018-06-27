@@ -68,6 +68,14 @@ captureOnMouseDown msg =
         (Decode.succeed msg)
 
 
+captureOnMouseOver : Msg -> Attribute Msg
+captureOnMouseOver msg =
+    Event.onWithOptions
+        "mouseover"
+        { preventDefault = False, stopPropagation = True }
+        (Decode.succeed msg)
+
+
 character : Position -> Maybe Position -> Position -> Char -> Html Msg
 character cursor selection position char =
     let
@@ -83,6 +91,7 @@ character cursor selection position char =
                   )
                 ]
             , captureOnMouseDown (MouseDown position)
+            , captureOnMouseOver (MouseOver position)
             ]
             [ text <| String.fromChar <| ensureNbsp char
             , if hasCursor then
@@ -104,15 +113,18 @@ line cursor selection number content =
         div
             [ class <| name ++ "-line"
             , captureOnMouseDown (MouseDown end)
+            , captureOnMouseOver (MouseOver end)
             ]
             [ span
                 [ class <| name ++ "-line__number"
                 , captureOnMouseDown (MouseDown start)
+                , captureOnMouseOver (MouseOver start)
                 ]
                 [ text <| toString number ]
             , span
                 [ class <| name ++ "-line__gutter-padding"
                 , captureOnMouseDown (MouseDown start)
+                , captureOnMouseOver (MouseOver start)
                 ]
                 [ text " " ]
             , span [ class <| name ++ "-line__content" ]
@@ -142,6 +154,7 @@ view lines state =
     div
         [ class <| name ++ "-container"
         , Event.on "keydown" Editor.Keymap.decoder
+        , Event.onMouseUp MouseUp
         , Attribute.tabindex 0
         ]
     <|
