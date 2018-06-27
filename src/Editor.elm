@@ -21,6 +21,7 @@ init =
         { scrolledLine = 0
         , cursor = Position 0 0
         , selection = Nothing
+        , dragging = False
         }
 
 

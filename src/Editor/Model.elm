@@ -11,4 +11,5 @@ type alias InternalState =
     { scrolledLine : Int
     , cursor : Position
     , selection : Maybe Position
+    , dragging : Bool
     }
