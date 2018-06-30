@@ -58,13 +58,14 @@ update msg model =
 
         EditorMsg msg_ ->
             let
-                ( editor, cmd ) =
-                    Editor.update
-                        (Buffer.lines model.content)
-                        msg_
-                        model.editor
+                ( editor, content, cmd ) =
+                    Editor.update model.content msg_ model.editor
             in
-                { model | editor = editor } ! [ Cmd.map EditorMsg cmd ]
+                { model
+                    | editor = editor
+                    , content = content
+                }
+                    ! [ Cmd.map EditorMsg cmd ]
 
 
 
@@ -90,7 +91,7 @@ view model =
                 []
             ]
         , model.editor
-            |> Editor.view (Buffer.lines model.content)
+            |> Editor.view model.content
             |> Html.map EditorMsg
         , div [] [ text <| toString model.editor ]
         ]

@@ -14,8 +14,7 @@ keyToMsg : String -> Decoder Msg
 keyToMsg key =
     case String.uncons key of
         Just ( char, "" ) ->
-            -- Decode.succeed (InsertChar char)
-            Decode.fail "TODO"
+            Decode.succeed (InsertChar char)
 
         _ ->
             case key of

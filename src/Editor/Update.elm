@@ -2,6 +2,7 @@ module Editor.Update exposing (Msg(..), update)
 
 import Array exposing (Array)
 import Editor.Model exposing (InternalState, Position)
+import Buffer.Basic as Buffer exposing (Buffer)
 
 
 type Msg
@@ -12,59 +13,86 @@ type Msg
     | CursorRight
     | CursorUp
     | CursorDown
+    | InsertChar Char
 
 
-update : Array String -> Msg -> InternalState -> ( InternalState, Cmd Msg )
-update lines msg state =
-    case msg of
-        MouseDown position ->
-            ( { state
-                | cursor = position
-                , dragging = True
-                , selection = Nothing
-              }
-            , Cmd.none
-            )
-
-        MouseOver position ->
-            if state.dragging then
+update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
+update buffer msg state =
+    let
+        lines =
+            buffer |> Buffer.lines |> Array.fromList
+    in
+        case msg of
+            MouseDown position ->
                 ( { state
-                    | selection =
-                        case state.selection of
-                            Just position ->
-                                Just position
-
-                            Nothing ->
-                                Just state.cursor
-                    , cursor = position
+                    | cursor = position
+                    , dragging = True
+                    , selection = Nothing
                   }
+                , buffer
                 , Cmd.none
                 )
-            else
-                state ! []
 
-        MouseUp ->
-            ( { state | dragging = False }, Cmd.none )
+            MouseOver position ->
+                if state.dragging then
+                    ( { state
+                        | selection =
+                            case state.selection of
+                                Just position ->
+                                    Just position
 
-        CursorLeft ->
-            ( { state | cursor = movePositionLeft 1 lines state.cursor }
-            , Cmd.none
-            )
+                                Nothing ->
+                                    Just state.cursor
+                        , cursor = position
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
+                else
+                    ( state, buffer, Cmd.none )
 
-        CursorRight ->
-            ( { state | cursor = movePositionRight 1 lines state.cursor }
-            , Cmd.none
-            )
+            MouseUp ->
+                ( { state | dragging = False }, buffer, Cmd.none )
 
-        CursorUp ->
-            ( { state | cursor = movePositionUp 1 lines state.cursor }
-            , Cmd.none
-            )
+            CursorLeft ->
+                ( { state | cursor = movePositionLeft 1 lines state.cursor }
+                , buffer
+                , Cmd.none
+                )
 
-        CursorDown ->
-            ( { state | cursor = movePositionDown 1 lines state.cursor }
-            , Cmd.none
-            )
+            CursorRight ->
+                ( { state | cursor = movePositionRight 1 lines state.cursor }
+                , buffer
+                , Cmd.none
+                )
+
+            CursorUp ->
+                ( { state | cursor = movePositionUp 1 lines state.cursor }
+                , buffer
+                , Cmd.none
+                )
+
+            CursorDown ->
+                ( { state | cursor = movePositionDown 1 lines state.cursor }
+                , buffer
+                , Cmd.none
+                )
+
+            InsertChar char ->
+                let
+                    cursor =
+                        state.cursor
+                in
+                    case state.selection of
+                        Just selection ->
+                        Nothing ->
+                            ( { state
+                                | cursor =
+                                    { cursor | column = cursor.column + 1 }
+                              }
+                            , Buffer.insert state.cursor (String.fromChar char) buffer
+                            , Cmd.none
+                            )
 
 
 arrayLast : Array a -> Maybe ( a, Int )

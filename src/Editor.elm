@@ -5,6 +5,7 @@ import Html exposing (Html)
 import Editor.Model exposing (InternalState, Position)
 import Editor.Update
 import Editor.View
+import Buffer.Basic as Buffer exposing (Buffer)
 
 
 type alias Msg =
@@ -25,12 +26,12 @@ init =
         }
 
 
-update : List String -> Msg -> State -> ( State, Cmd Msg )
-update lines msg (State state) =
-    Editor.Update.update (Array.fromList lines) msg state
-        |> Tuple.mapFirst State
+update : Buffer -> Msg -> State -> ( State, Buffer, Cmd Msg )
+update buffer msg (State state) =
+    Editor.Update.update buffer msg state
+        |> (\( state, buffer, cmd ) -> ( State state, buffer, cmd ))
 
 
-view : List String -> State -> Html Msg
-view lines (State state) =
-    Editor.View.view lines state
+view : Buffer -> State -> Html Msg
+view buffer (State state) =
+    Editor.View.view (Buffer.lines buffer) state
