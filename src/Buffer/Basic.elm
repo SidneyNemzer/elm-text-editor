@@ -2,7 +2,7 @@ module Buffer.Basic exposing (Buffer, init, lines, insert, toString)
 
 import List.Extra
 import String.Extra
-import Editor.Model exposing (Position)
+import Position exposing (Position)
 
 
 type Buffer

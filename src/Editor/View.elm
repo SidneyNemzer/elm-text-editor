@@ -5,7 +5,8 @@ import Html exposing (Html, Attribute, span, div, text)
 import Html.Attributes as Attribute exposing (class, classList)
 import Html.Events as Event
 import Json.Decode as Decode
-import Editor.Model exposing (Position, InternalState)
+import Position exposing (Position)
+import Editor.Model exposing (InternalState)
 import Editor.Update exposing (Msg(..))
 import Editor.Keymap
 
@@ -15,32 +16,10 @@ name =
     "elm-editor"
 
 
-between : Int -> Int -> Int -> Bool
-between start end point =
-    if start > end then
-        between end start point
-    else
-        start /= end && point >= start && point < end
-
-
-betweenPositions : Position -> Position -> Position -> Bool
-betweenPositions start end ({ line, column } as position) =
-    if start.line > end.line then
-        betweenPositions end start position
-    else if start.line == end.line then
-        line == start.line && between start.column end.column column
-    else if start.line == line then
-        column >= start.column
-    else if end.line == line then
-        column < end.column
-    else
-        between start.line end.line line
-
-
 selected : Position -> Maybe Position -> Position -> Bool
 selected cursor maybeSelection character =
     maybeSelection
-        |> Maybe.map (\selection -> betweenPositions cursor selection character)
+        |> Maybe.map (\selection -> Position.between cursor selection character)
         |> Maybe.withDefault False
 
 

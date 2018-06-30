@@ -1,10 +1,6 @@
-module Editor.Model exposing (Position, InternalState)
+module Editor.Model exposing (InternalState)
 
-
-type alias Position =
-    { line : Int
-    , column : Int
-    }
+import Position exposing (Position)
 
 
 type alias InternalState =

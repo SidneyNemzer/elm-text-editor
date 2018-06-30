@@ -2,7 +2,8 @@ module Editor exposing (State, Msg, init, update, view)
 
 import Array
 import Html exposing (Html)
-import Editor.Model exposing (InternalState, Position)
+import Position exposing (Position)
+import Editor.Model exposing (InternalState)
 import Editor.Update
 import Editor.View
 import Buffer.Basic as Buffer exposing (Buffer)

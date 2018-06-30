@@ -1,7 +1,8 @@
 module Editor.Update exposing (Msg(..), update)
 
 import Array exposing (Array)
-import Editor.Model exposing (InternalState, Position)
+import Position exposing (Position)
+import Editor.Model exposing (InternalState)
 import Buffer.Basic as Buffer exposing (Buffer)
 
 
