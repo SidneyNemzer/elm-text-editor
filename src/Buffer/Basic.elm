@@ -32,6 +32,17 @@ insert { line, column } string (Buffer buffer) =
         |> Buffer
 
 
+indexFromPosition : String -> Position -> Maybe Int
+indexFromPosition buffer position =
+    -- Doesn't validate columns, only lines
+    if position.line == 0 then
+        Just position.column
+    else
+        String.indexes "\n" buffer
+            |> List.Extra.getAt (position.line - 1)
+            |> Maybe.map (\line -> line + position.column + 1)
+
+
 replace : Position -> Position -> String -> Buffer -> Buffer
 replace start end string (Buffer buffer) =
     if
@@ -40,31 +51,16 @@ replace start end string (Buffer buffer) =
     then
         replace end start string (Buffer buffer)
     else
-        let
-            positionToIndex position =
-                if position.line == 0 then
-                    Just position.column
-                else
-                    String.indexes "\n" buffer
-                        |> List.Extra.getAt (position.line - 1)
-                        |> Maybe.map (\line -> line + position.column + 1)
-
-            maybeStartIndex =
-                positionToIndex start
-
-            maybeEndIndex =
-                positionToIndex end
-        in
-            Maybe.map2
-                (\startIndex endIndex ->
-                    String.slice 0 startIndex buffer
-                        ++ string
-                        ++ String.dropLeft endIndex buffer
-                )
-                maybeStartIndex
-                maybeEndIndex
-                |> Maybe.withDefault buffer
-                |> Buffer
+        Maybe.map2
+            (\startIndex endIndex ->
+                String.slice 0 startIndex buffer
+                    ++ string
+                    ++ String.dropLeft endIndex buffer
+            )
+            (indexFromPosition buffer start)
+            (indexFromPosition buffer end)
+            |> Maybe.withDefault buffer
+            |> Buffer
 
 
 lines : Buffer -> List String
