@@ -9,6 +9,8 @@ order : Position -> Position -> ( Position, Position )
 order pos1 pos2 =
     if pos2.line > pos1.line then
         ( pos1, pos2 )
+    else if pos2.line == pos1.line && pos2.column > pos1.column then
+        ( pos1, pos2 )
     else
         ( pos2, pos1 )
 
