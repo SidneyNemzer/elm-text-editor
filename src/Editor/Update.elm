@@ -149,23 +149,16 @@ update buffer msg state =
                             )
 
                     Nothing ->
-                        let
-                            updatedBuffer =
-                                Buffer.replace
-                                    state.cursor
-                                    (Position.nextColumn state.cursor)
-                                    ""
-                                    buffer
-                        in
-                            ( { state
-                                | cursor =
-                                    Position.previousColumn state.cursor
-                                        |> clampPosition
-                                            (Buffer.lines updatedBuffer |> Array.fromList)
-                              }
-                            , updatedBuffer
-                            , Cmd.none
-                            )
+                        ( { state
+                            | cursor =
+                                Position.previousColumn state.cursor
+                                    -- use old buffer to place cursor at the
+                                    -- end of the old line
+                                    |> clampPosition lines
+                          }
+                        , Buffer.removeBefore state.cursor buffer
+                        , Cmd.none
+                        )
 
 
 arrayLast : Array a -> Maybe ( a, Int )
