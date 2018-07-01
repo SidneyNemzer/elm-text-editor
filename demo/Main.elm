@@ -30,12 +30,10 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    { content = Buffer.init """Testsdfasdfa
-abcdabasdfaa
-acbsdfasdfdf
-asdfasdfasdf
-asdfasdfasda
-asdfasdfasda"""
+    { content = Buffer.init """123456
+789012
+345678
+901234"""
     , editor = Editor.init
     }
         ! []
