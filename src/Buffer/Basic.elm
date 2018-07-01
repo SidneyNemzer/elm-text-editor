@@ -1,4 +1,13 @@
-module Buffer.Basic exposing (Buffer, init, lines, insert, replace, toString)
+module Buffer.Basic
+    exposing
+        ( Buffer
+        , init
+        , lines
+        , insert
+        , replace
+        , removeBefore
+        , toString
+        )
 
 import List.Extra
 import String.Extra
@@ -61,6 +70,18 @@ replace start end string (Buffer buffer) =
             (indexFromPosition buffer end)
             |> Maybe.withDefault buffer
             |> Buffer
+
+
+removeBefore : Position -> Buffer -> Buffer
+removeBefore position (Buffer buffer) =
+    indexFromPosition buffer position
+        |> Maybe.map
+            (\index ->
+                String.slice 0 (index - 1) buffer
+                    ++ String.dropLeft index buffer
+            )
+        |> Maybe.withDefault buffer
+        |> Buffer
 
 
 lines : Buffer -> List String
