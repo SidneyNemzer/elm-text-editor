@@ -1,4 +1,4 @@
-module Buffer.Basic exposing (Buffer, init, lines, insert, toString)
+module Buffer.Basic exposing (Buffer, init, lines, insert, replace, toString)
 
 import List.Extra
 import String.Extra
@@ -30,6 +30,41 @@ insert { line, column } string (Buffer buffer) =
         |> listMapAt (String.Extra.insertAt string column) line
         |> String.join "\n"
         |> Buffer
+
+
+replace : Position -> Position -> String -> Buffer -> Buffer
+replace start end string (Buffer buffer) =
+    if
+        (start.line > end.line)
+            || (start.line == end.line && start.column > end.column)
+    then
+        replace end start string (Buffer buffer)
+    else
+        let
+            positionToIndex position =
+                if position.line == 0 then
+                    Just position.column
+                else
+                    String.indexes "\n" buffer
+                        |> List.Extra.getAt (position.line - 1)
+                        |> Maybe.map (\line -> line + position.column + 1)
+
+            maybeStartIndex =
+                positionToIndex start
+
+            maybeEndIndex =
+                positionToIndex end
+        in
+            Maybe.map2
+                (\startIndex endIndex ->
+                    String.slice 0 startIndex buffer
+                        ++ string
+                        ++ String.dropLeft endIndex buffer
+                )
+                maybeStartIndex
+                maybeEndIndex
+                |> Maybe.withDefault buffer
+                |> Buffer
 
 
 lines : Buffer -> List String

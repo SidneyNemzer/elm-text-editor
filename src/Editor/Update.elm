@@ -80,18 +80,33 @@ update buffer msg state =
                 )
 
             InsertChar char ->
-                let
-                    cursor =
-                        state.cursor
-                in
-                    case state.selection of
-                        Just selection ->
-                        Nothing ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
                             ( { state
-                                | cursor =
-                                    { cursor | column = cursor.column + 1 }
+                                | cursor = start
+                                , selection = Nothing
                               }
-                            , Buffer.insert state.cursor (String.fromChar char) buffer
+                            , Buffer.replace
+                                start
+                                end
+                                (String.fromChar char)
+                                buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        ( { state
+                            | cursor = Position.nextColumn state.cursor
+                          }
+                        , Buffer.insert state.cursor (String.fromChar char) buffer
+                        , Cmd.none
+                        )
+                            ( { state
+                              }
                             , Cmd.none
                             )
 
