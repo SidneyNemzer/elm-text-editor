@@ -111,16 +111,15 @@ clampPosition : Array String -> Position -> Position
 clampPosition lines position =
     -- line is less than first line -> first column first line
     -- line doesn't exist -> last column last line
-    -- column is greater than line -> first column of next line
-    -- column is less than beginning -> last column of previous line
+    -- column is greater than line -> last column of line
+    -- column is less than 0 -> last column of previous line
     if position.line < 0 then
         Position 0 0
     else
         case Array.get position.line lines of
             Just line ->
                 if position.column > String.length line then
-                    Position (position.line + 1) 0
-                        |> clampPosition lines
+                    Position position.line (String.length line)
                 else if position.column < 0 then
                     Array.get (position.line - 1) lines
                         |> Maybe.map
