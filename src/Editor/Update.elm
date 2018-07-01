@@ -126,8 +126,8 @@ update buffer msg state =
                     Nothing ->
                         ( state
                         , Buffer.replace
-                            (Position.addColumn 1 state.cursor)
-                            (Position.addColumn 2 state.cursor)
+                            state.cursor
+                            (Position.nextColumn state.cursor)
                             ""
                             buffer
                         , Cmd.none
