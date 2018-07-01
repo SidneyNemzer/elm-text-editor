@@ -15,6 +15,8 @@ type Msg
     | CursorUp
     | CursorDown
     | InsertChar Char
+    | RemoveCharAfter
+    | RemoveCharBefore
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -105,8 +107,63 @@ update buffer msg state =
                         , Buffer.insert state.cursor (String.fromChar char) buffer
                         , Cmd.none
                         )
+
+            RemoveCharAfter ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
                             ( { state
+                                | cursor = start
+                                , selection = Nothing
                               }
+                            , Buffer.replace start end "" buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        ( state
+                        , Buffer.replace
+                            (Position.addColumn 1 state.cursor)
+                            (Position.addColumn 2 state.cursor)
+                            ""
+                            buffer
+                        , Cmd.none
+                        )
+
+            RemoveCharBefore ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
+                            ( { state
+                                | cursor = start
+                                , selection = Nothing
+                              }
+                            , Buffer.replace start end "" buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        let
+                            updatedBuffer =
+                                Buffer.replace
+                                    state.cursor
+                                    (Position.nextColumn state.cursor)
+                                    ""
+                                    buffer
+                        in
+                            ( { state
+                                | cursor =
+                                    Position.previousColumn state.cursor
+                                        |> clampPosition
+                                            (Buffer.lines updatedBuffer |> Array.fromList)
+                              }
+                            , updatedBuffer
                             , Cmd.none
                             )
 

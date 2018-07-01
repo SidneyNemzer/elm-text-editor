@@ -31,16 +31,13 @@ keyToMsg key =
                     Decode.succeed CursorRight
 
                 "Backspace" ->
-                    -- Decode.succeed RemoveCharBefore
-                    Decode.fail "TODO"
+                    Decode.succeed RemoveCharBefore
 
                 "Delete" ->
-                    -- Decode.succeed RemoveCharAfter
-                    Decode.fail "TODO"
+                    Decode.succeed RemoveCharAfter
 
                 "Enter" ->
-                    -- Decode.succeed NewLine
-                    Decode.fail "TODO"
+                    Decode.succeed (InsertChar '\n')
 
                 _ ->
                     Decode.fail "This key does nothing"
