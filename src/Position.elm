@@ -1,4 +1,13 @@
-module Position exposing (Position, order, between)
+module Position
+    exposing
+        ( Position
+        , order
+        , between
+        , addColumn
+        , nextColumn
+        , previousColumn
+        , setColumn
+        )
 
 
 type alias Position =
@@ -37,3 +46,23 @@ between pos1 pos2 { line, column } =
             column < end.column
         else
             betweenHelp start.line end.line line
+
+
+addColumn : Int -> Position -> Position
+addColumn amount position =
+    { position | column = position.column + amount }
+
+
+nextColumn : Position -> Position
+nextColumn =
+    addColumn 1
+
+
+previousColumn : Position -> Position
+previousColumn =
+    addColumn -1
+
+
+setColumn : Int -> Position -> Position
+setColumn column position =
+    { position | column = column }
