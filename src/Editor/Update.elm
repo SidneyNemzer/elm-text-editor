@@ -62,6 +62,7 @@ update buffer msg state =
                     | cursor =
                         Position.previousColumn state.cursor
                             |> clampPosition False lines
+                    , selection = Nothing
                   }
                 , buffer
                 , Cmd.none
@@ -72,6 +73,7 @@ update buffer msg state =
                     | cursor =
                         Position.nextColumn state.cursor
                             |> clampPosition True lines
+                    , selection = Nothing
                   }
                 , buffer
                 , Cmd.none
@@ -82,6 +84,7 @@ update buffer msg state =
                     | cursor =
                         Position.previousLine state.cursor
                             |> clampPosition False lines
+                    , selection = Nothing
                   }
                 , buffer
                 , Cmd.none
@@ -92,6 +95,7 @@ update buffer msg state =
                     | cursor =
                         Position.nextLine state.cursor
                             |> clampPosition False lines
+                    , selection = Nothing
                   }
                 , buffer
                 , Cmd.none
