@@ -102,7 +102,7 @@ line cursor selection number content =
                 , captureOnMouseDown (MouseDown start)
                 , captureOnMouseOver (MouseOver start)
                 ]
-                [ text " " ]
+                [ text <| String.fromChar nbsp ]
             , span [ class <| name ++ "-line__content" ]
                 (content
                     |> String.toList
