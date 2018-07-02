@@ -7,6 +7,8 @@ module Position
         , nextColumn
         , previousColumn
         , setColumn
+        , nextLine
+        , previousLine
         )
 
 
@@ -66,3 +68,18 @@ previousColumn =
 setColumn : Int -> Position -> Position
 setColumn column position =
     { position | column = column }
+
+
+addLine : Int -> Position -> Position
+addLine amount position =
+    { position | line = position.line + amount }
+
+
+nextLine : Position -> Position
+nextLine =
+    addLine 1
+
+
+previousLine : Position -> Position
+previousLine =
+    addLine -1

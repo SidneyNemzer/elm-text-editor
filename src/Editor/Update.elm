@@ -58,25 +58,41 @@ update buffer msg state =
                 ( { state | dragging = False }, buffer, Cmd.none )
 
             CursorLeft ->
-                ( { state | cursor = movePositionLeft 1 lines state.cursor }
+                ( { state
+                    | cursor =
+                        Position.previousColumn state.cursor
+                            |> clampPosition False lines
+                  }
                 , buffer
                 , Cmd.none
                 )
 
             CursorRight ->
-                ( { state | cursor = movePositionRight 1 lines state.cursor }
+                ( { state
+                    | cursor =
+                        Position.nextColumn state.cursor
+                            |> clampPosition True lines
+                  }
                 , buffer
                 , Cmd.none
                 )
 
             CursorUp ->
-                ( { state | cursor = movePositionUp 1 lines state.cursor }
+                ( { state
+                    | cursor =
+                        Position.previousLine state.cursor
+                            |> clampPosition False lines
+                  }
                 , buffer
                 , Cmd.none
                 )
 
             CursorDown ->
-                ( { state | cursor = movePositionDown 1 lines state.cursor }
+                ( { state
+                    | cursor =
+                        Position.nextLine state.cursor
+                            |> clampPosition False lines
+                  }
                 , buffer
                 , Cmd.none
                 )
@@ -154,7 +170,7 @@ update buffer msg state =
                                 Position.previousColumn state.cursor
                                     -- use old buffer to place cursor at the
                                     -- end of the old line
-                                    |> clampPosition lines
+                                    |> clampPosition False lines
                           }
                         , Buffer.removeBefore state.cursor buffer
                         , Cmd.none
@@ -172,11 +188,12 @@ arrayLast array =
             |> Maybe.map (\a -> ( a, length - 1 ))
 
 
-clampPosition : Array String -> Position -> Position
-clampPosition lines position =
+clampPosition : Bool -> Array String -> Position -> Position
+clampPosition preferNextLine lines position =
     -- line is less than first line -> first column first line
     -- line doesn't exist -> last column last line
-    -- column is greater than line -> last column of line
+    -- column is greater than line ->
+    -- perferNextLine ? first column next line : last column of line
     -- column is less than 0 -> last column of previous line
     if position.line < 0 then
         Position 0 0
@@ -184,7 +201,11 @@ clampPosition lines position =
         case Array.get position.line lines of
             Just line ->
                 if position.column > String.length line then
-                    Position position.line (String.length line)
+                    if preferNextLine then
+                        Position (position.line + 1) 0
+                            |> clampPosition True lines
+                    else
+                        Position position.line (String.length line)
                 else if position.column < 0 then
                     Array.get (position.line - 1) lines
                         |> Maybe.map
@@ -200,27 +221,3 @@ clampPosition lines position =
 
                     Nothing ->
                         Position 0 0
-
-
-movePositionLeft : Int -> Array String -> Position -> Position
-movePositionLeft distance lines position =
-    { position | column = position.column - distance }
-        |> clampPosition lines
-
-
-movePositionRight : Int -> Array String -> Position -> Position
-movePositionRight distance lines position =
-    { position | column = position.column + distance }
-        |> clampPosition lines
-
-
-movePositionUp : Int -> Array String -> Position -> Position
-movePositionUp distance lines position =
-    { position | line = position.line - distance }
-        |> clampPosition lines
-
-
-movePositionDown : Int -> Array String -> Position -> Position
-movePositionDown distance lines position =
-    { position | line = position.line + distance }
-        |> clampPosition lines
