@@ -1,8 +1,9 @@
 module Main exposing (..)
 
+import Json.Decode as Decode exposing (Decoder)
 import Html exposing (div, textarea, text)
 import Html.Attributes exposing (value)
-import Html.Events exposing (onInput)
+import Html.Events as Event exposing (onInput)
 import Editor
 import Editor.Styles
 import Buffer.Basic as Buffer exposing (Buffer)
@@ -25,6 +26,7 @@ main =
 type alias Model =
     { content : Buffer
     , editor : Editor.State
+    , lastKeyPress : Maybe String
     }
 
 
@@ -35,6 +37,7 @@ init =
 345678
 901234"""
     , editor = Editor.init
+    , lastKeyPress = Nothing
     }
         ! []
 
@@ -46,6 +49,7 @@ init =
 type Msg
     = SetContent String
     | EditorMsg Editor.Msg
+    | KeyPress String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -65,6 +69,9 @@ update msg model =
                 }
                     ! [ Cmd.map EditorMsg cmd ]
 
+        KeyPress key ->
+            { model | lastKeyPress = Just key } ! []
+
 
 
 -- SUBSCRIPTIONS
@@ -79,9 +86,17 @@ subscriptions model =
 -- VIEW
 
 
+keyDecoder : (String -> msg) -> Decoder msg
+keyDecoder keyToMsg =
+    Decode.field "key" Decode.string
+        |> Decode.map keyToMsg
+
+
 view : Model -> Html.Html Msg
 view model =
-    div []
+    div
+        [ Event.on "keydown" (keyDecoder KeyPress)
+        ]
         [ Editor.Styles.styles
         , div []
             [ textarea
@@ -92,4 +107,10 @@ view model =
             |> Editor.view model.content
             |> Html.map EditorMsg
         , div [] [ text <| toString model.editor ]
+        , case model.lastKeyPress of
+            Just key ->
+                div [] [ text <| "Last key press: " ++ key ]
+
+            Nothing ->
+                text ""
         ]
