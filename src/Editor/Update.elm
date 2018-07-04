@@ -14,6 +14,8 @@ type Msg
     | CursorRight
     | CursorUp
     | CursorDown
+    | CursorToEndOfLine
+    | CursorToStartOfLine
     | InsertChar Char
     | RemoveCharAfter
     | RemoveCharBefore
@@ -95,6 +97,32 @@ update buffer msg state =
                     | cursor =
                         Position.nextLine state.cursor
                             |> clampPosition False lines
+                    , selection = Nothing
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            CursorToEndOfLine ->
+                ( { state
+                    | cursor =
+                        case Array.get state.cursor.line lines of
+                            Just line ->
+                                Position.setColumn
+                                    (String.length line)
+                                    state.cursor
+
+                            Nothing ->
+                                clampPosition False lines state.cursor
+                    , selection = Nothing
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            CursorToStartOfLine ->
+                ( { state
+                    | cursor = Position.setColumn 0 state.cursor
                     , selection = Nothing
                   }
                 , buffer

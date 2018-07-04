@@ -39,5 +39,11 @@ keyToMsg key =
                 "Enter" ->
                     Decode.succeed (InsertChar '\n')
 
+                "Home" ->
+                    Decode.succeed CursorToStartOfLine
+
+                "End" ->
+                    Decode.succeed CursorToEndOfLine
+
                 _ ->
                     Decode.fail "This key does nothing"
