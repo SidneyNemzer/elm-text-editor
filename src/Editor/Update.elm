@@ -109,7 +109,11 @@ update buffer msg state =
                                 Position.order selection state.cursor
                         in
                             ( { state
-                                | cursor = start
+                                | cursor =
+                                    if char == '\n' then
+                                        { line = start.line + 1, column = 0 }
+                                    else
+                                        start
                                 , selection = Nothing
                               }
                             , Buffer.replace
@@ -122,7 +126,11 @@ update buffer msg state =
 
                     Nothing ->
                         ( { state
-                            | cursor = Position.nextColumn state.cursor
+                            | cursor =
+                                if char == '\n' then
+                                    { line = state.cursor.line + 1, column = 0 }
+                                else
+                                    Position.nextColumn state.cursor
                           }
                         , Buffer.insert state.cursor (String.fromChar char) buffer
                         , Cmd.none
