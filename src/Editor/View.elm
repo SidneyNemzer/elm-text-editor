@@ -129,7 +129,10 @@ view : List String -> InternalState -> Html Msg
 view lines state =
     div
         [ class <| name ++ "-container"
-        , Event.on "keydown" Editor.Keymap.decoder
+        , Event.onWithOptions
+            "keydown"
+            { preventDefault = True, stopPropagation = False }
+            Editor.Keymap.decoder
         , Event.onMouseUp MouseUp
         , Attribute.tabindex 0
         ]
