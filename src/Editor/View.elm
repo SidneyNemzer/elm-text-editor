@@ -96,7 +96,7 @@ line cursor selection number content =
                 , captureOnMouseDown (MouseDown start)
                 , captureOnMouseOver (MouseOver start)
                 ]
-                [ text <| toString number ]
+                [ text <| toString (number + 1) ]
             , span
                 [ class <| name ++ "-line__gutter-padding"
                 , captureOnMouseDown (MouseDown start)
