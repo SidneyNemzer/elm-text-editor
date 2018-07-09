@@ -19,6 +19,7 @@ type Msg
     | InsertChar Char
     | RemoveCharAfter
     | RemoveCharBefore
+    | IncreaseIndent
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -215,6 +216,52 @@ update buffer msg state =
                         , Buffer.removeBefore state.cursor buffer
                         , Cmd.none
                         )
+
+            IncreaseIndent ->
+                case state.selection of
+                    Just selection ->
+                        -- insert indent character in front of all lines that
+                        -- are in the selection. Move cursor and selection
+                        -- in direction of indent
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
+                            ( { state
+                                | cursor =
+                                    Position.addColumn
+                                        Buffer.indentSize
+                                        state.cursor
+                                , selection =
+                                    Just <|
+                                        Position.addColumn
+                                            Buffer.indentSize
+                                            selection
+                              }
+                            , List.range start.line end.line
+                                |> List.foldl
+                                    (\line buffer ->
+                                        Buffer.indentFrom
+                                            (Position line 0)
+                                            buffer
+                                            |> Tuple.first
+                                    )
+                                    buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        let
+                            ( indentedBuffer, indentedColumn ) =
+                                Buffer.indentFrom state.cursor buffer
+                        in
+                            ( { state
+                                | cursor =
+                                    Position.setColumn indentedColumn state.cursor
+                              }
+                            , indentedBuffer
+                            , Cmd.none
+                            )
 
 
 arrayLast : Array a -> Maybe ( a, Int )

@@ -7,6 +7,8 @@ module Buffer.Basic
         , replace
         , removeBefore
         , toString
+        , indentFrom
+        , indentSize
         )
 
 import List.Extra
@@ -16,6 +18,11 @@ import Position exposing (Position)
 
 type Buffer
     = Buffer String
+
+
+indentSize : Int
+indentSize =
+    2
 
 
 init : String -> Buffer
@@ -92,3 +99,29 @@ lines (Buffer content) =
 toString : Buffer -> String
 toString (Buffer buffer) =
     buffer
+
+
+{-| Indent the given line from the given column. Returns the modified buffer and
+the column + indent size
+-}
+indentFrom : Position -> Buffer -> ( Buffer, Int )
+indentFrom { line, column } (Buffer buffer) =
+    indexFromPosition buffer (Position line 0)
+        |> Maybe.map
+            (\lineStart ->
+                let
+                    addIndentSize =
+                        indentSize
+                            - (String.slice lineStart (lineStart + column) buffer
+                                |> String.length
+                              )
+                            % indentSize
+                in
+                    ( Buffer <|
+                        String.slice 0 (lineStart + column) buffer
+                            ++ String.repeat addIndentSize " "
+                            ++ String.dropLeft (lineStart + column) buffer
+                    , column + addIndentSize
+                    )
+            )
+        |> Maybe.withDefault ( Buffer buffer, column )

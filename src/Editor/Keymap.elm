@@ -45,5 +45,8 @@ keyToMsg key =
                 "End" ->
                     Decode.succeed CursorToEndOfLine
 
+                "Tab" ->
+                    Decode.succeed IncreaseIndent
+
                 _ ->
                     Decode.fail "This key does nothing"
