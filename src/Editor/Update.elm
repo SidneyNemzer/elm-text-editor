@@ -220,9 +220,6 @@ update buffer msg state =
             IncreaseIndent ->
                 case state.selection of
                     Just selection ->
-                        -- insert indent character in front of all lines that
-                        -- are in the selection. Move cursor and selection
-                        -- in direction of indent
                         let
                             ( start, end ) =
                                 Position.order selection state.cursor

@@ -79,6 +79,10 @@ replace start end string (Buffer buffer) =
             |> Buffer
 
 
+{-| Remove the character before the given position. This is useful because
+determining the *previous* valid position is relativly expensive, but it's easy
+for the buffer to just use the previous index.
+-}
 removeBefore : Position -> Buffer -> Buffer
 removeBefore position (Buffer buffer) =
     indexFromPosition buffer position
