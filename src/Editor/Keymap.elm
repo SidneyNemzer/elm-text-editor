@@ -1,52 +1,108 @@
 module Editor.Keymap exposing (decoder)
 
+import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder)
 import Editor.Update exposing (Msg(..))
 
 
+type Modifier
+    = None
+    | Control
+    | Shift
+    | ControlAndShift
+
+
+modifier : Bool -> Bool -> Modifier
+modifier ctrl shift =
+    case ( ctrl, shift ) of
+        ( True, True ) ->
+            ControlAndShift
+
+        ( False, True ) ->
+            Shift
+
+        ( True, False ) ->
+            Control
+
+        ( False, False ) ->
+            None
+
+
+modifierDecoder : Decoder Modifier
+modifierDecoder =
+    Decode.map2 modifier
+        (Decode.field "ctrlKey" Decode.bool)
+        (Decode.field "shiftKey" Decode.bool)
+
+
 decoder : Decoder Msg
 decoder =
-    Decode.field "key" Decode.string
-        |> Decode.andThen keyToMsg
+    modifierDecoder
+        |> Decode.andThen
+            (\modifier ->
+                (Decode.field "key" Decode.string)
+                    |> Decode.andThen (keyToMsg modifier)
+            )
 
 
-keyToMsg : String -> Decoder Msg
-keyToMsg key =
+type alias Keymap =
+    Dict String Msg
+
+
+keymaps :
+    { noModifier : Keymap
+    , shift : Keymap
+    , control : Keymap
+    , controlAndShift : Keymap
+    }
+keymaps =
+    { noModifier =
+        Dict.fromList
+            [ ( "ArrowUp", CursorUp )
+            , ( "ArrowDown", CursorDown )
+            , ( "ArrowLeft", CursorLeft )
+            , ( "ArrowRight", CursorRight )
+            , ( "Backspace", RemoveCharBefore )
+            , ( "Delete", RemoveCharAfter )
+            , ( "Enter", InsertChar '\n' )
+            , ( "Home", CursorToStartOfLine )
+            , ( "End", CursorToEndOfLine )
+            , ( "Tab", IncreaseIndent )
+            ]
+    , shift =
+        Dict.fromList
+            [ ( "ArrowUp", SelectUp )
+            , ( "ArrowDown", SelectDown )
+            , ( "ArrowLeft", SelectLeft )
+            , ( "ArrowRight", SelectRight )
+            ]
+    , control = Dict.empty
+    , controlAndShift = Dict.empty
+    }
+
+
+keyToMsg : Modifier -> String -> Decoder Msg
+keyToMsg modifier key =
     case String.uncons key of
         Just ( char, "" ) ->
             Decode.succeed (InsertChar char)
 
         _ ->
-            case key of
-                "ArrowUp" ->
-                    Decode.succeed CursorUp
+            let
+                keymap =
+                    case modifier of
+                        None ->
+                            keymaps.noModifier
 
-                "ArrowDown" ->
-                    Decode.succeed CursorDown
+                        Control ->
+                            keymaps.control
 
-                "ArrowLeft" ->
-                    Decode.succeed CursorLeft
+                        Shift ->
+                            keymaps.shift
 
-                "ArrowRight" ->
-                    Decode.succeed CursorRight
-
-                "Backspace" ->
-                    Decode.succeed RemoveCharBefore
-
-                "Delete" ->
-                    Decode.succeed RemoveCharAfter
-
-                "Enter" ->
-                    Decode.succeed (InsertChar '\n')
-
-                "Home" ->
-                    Decode.succeed CursorToStartOfLine
-
-                "End" ->
-                    Decode.succeed CursorToEndOfLine
-
-                "Tab" ->
-                    Decode.succeed IncreaseIndent
-
-                _ ->
-                    Decode.fail "This key does nothing"
+                        ControlAndShift ->
+                            keymaps.controlAndShift
+            in
+                Dict.get key keymap
+                    |> Maybe.map Decode.succeed
+                    |> Maybe.withDefault (Decode.fail "This key does nothing")

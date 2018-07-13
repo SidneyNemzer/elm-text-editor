@@ -20,6 +20,10 @@ type Msg
     | RemoveCharAfter
     | RemoveCharBefore
     | IncreaseIndent
+    | SelectUp
+    | SelectDown
+    | SelectLeft
+    | SelectRight
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -259,6 +263,66 @@ update buffer msg state =
                             , indentedBuffer
                             , Cmd.none
                             )
+
+            SelectUp ->
+                ( { state
+                    | cursor =
+                        Position.previousLine state.cursor
+                            |> clampPosition False lines
+                    , selection =
+                        if state.selection == Nothing then
+                            Just state.cursor
+                        else
+                            state.selection
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            SelectDown ->
+                ( { state
+                    | cursor =
+                        Position.nextLine state.cursor
+                            |> clampPosition False lines
+                    , selection =
+                        if state.selection == Nothing then
+                            Just state.cursor
+                        else
+                            state.selection
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            SelectLeft ->
+                ( { state
+                    | cursor =
+                        Position.previousColumn state.cursor
+                            |> clampPosition False lines
+                    , selection =
+                        if state.selection == Nothing then
+                            Just state.cursor
+                        else
+                            state.selection
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            SelectRight ->
+                ( { state
+                    | cursor =
+                        Position.nextColumn state.cursor
+                            |> clampPosition True lines
+                    , selection =
+                        if state.selection == Nothing then
+                            Just state.cursor
+                        else
+                            state.selection
+                  }
+                , buffer
+                , Cmd.none
+                )
 
 
 arrayLast : Array a -> Maybe ( a, Int )
