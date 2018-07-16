@@ -2,7 +2,6 @@ module Main exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
 import Html exposing (div, textarea, text)
-import Html.Attributes exposing (value)
 import Html.Events as Event exposing (onInput)
 import Editor
 import Editor.Styles
@@ -47,17 +46,13 @@ init =
 
 
 type Msg
-    = SetContent String
-    | EditorMsg Editor.Msg
+    = EditorMsg Editor.Msg
     | KeyPress String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SetContent content ->
-            { model | content = Buffer.init content } ! []
-
         EditorMsg msg_ ->
             let
                 ( editor, content, cmd ) =
@@ -98,11 +93,6 @@ view model =
         [ Event.on "keydown" (keyDecoder KeyPress)
         ]
         [ Editor.Styles.styles
-        , div []
-            [ textarea
-                [ value <| Buffer.toString model.content, onInput SetContent ]
-                []
-            ]
         , model.editor
             |> Editor.view model.content
             |> Html.map EditorMsg
