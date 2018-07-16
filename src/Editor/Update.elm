@@ -16,7 +16,7 @@ type Msg
     | CursorDown
     | CursorToEndOfLine
     | CursorToStartOfLine
-    | InsertChar Char
+    | Insert String
     | RemoveCharAfter
     | RemoveCharBefore
     | IncreaseIndent
@@ -134,7 +134,7 @@ update buffer msg state =
                 , Cmd.none
                 )
 
-            InsertChar char ->
+            Insert string ->
                 case state.selection of
                     Just selection ->
                         let
@@ -143,29 +143,25 @@ update buffer msg state =
                         in
                             ( { state
                                 | cursor =
-                                    if char == '\n' then
+                                    if string == "\n" then
                                         { line = start.line + 1, column = 0 }
                                     else
                                         start
                                 , selection = Nothing
                               }
-                            , Buffer.replace
-                                start
-                                end
-                                (String.fromChar char)
-                                buffer
+                            , Buffer.replace start end string buffer
                             , Cmd.none
                             )
 
                     Nothing ->
                         ( { state
                             | cursor =
-                                if char == '\n' then
+                                if string == "\n" then
                                     { line = state.cursor.line + 1, column = 0 }
                                 else
                                     Position.nextColumn state.cursor
                           }
-                        , Buffer.insert state.cursor (String.fromChar char) buffer
+                        , Buffer.insert state.cursor string buffer
                         , Cmd.none
                         )
 

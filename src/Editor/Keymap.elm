@@ -12,6 +12,14 @@ type Modifier
     | ControlAndShift
 
 
+type alias Keydown =
+    { char : Maybe String
+    , key : String
+    , ctrl : Bool
+    , shift : Bool
+    }
+
+
 modifier : Bool -> Bool -> Modifier
 modifier ctrl shift =
     case ( ctrl, shift ) of
@@ -28,21 +36,28 @@ modifier ctrl shift =
             None
 
 
-modifierDecoder : Decoder Modifier
-modifierDecoder =
-    Decode.map2 modifier
+keydownDecoder : Decoder Keydown
+keydownDecoder =
+    Decode.map5 Keydown
+        (Decode.field "key" Decode.string
+            |> Decode.map
+                (\key ->
+                    case String.uncons key of
+                        Just ( char, "" ) ->
+                            Just (String.fromChar char)
+
+                        _ ->
+                            Nothing
+                )
+        )
+        (Decode.field "key" Decode.string)
         (Decode.field "ctrlKey" Decode.bool)
         (Decode.field "shiftKey" Decode.bool)
 
 
 decoder : Decoder Msg
 decoder =
-    modifierDecoder
-        |> Decode.andThen
-            (\modifier ->
-                (Decode.field "key" Decode.string)
-                    |> Decode.andThen (keyToMsg modifier)
-            )
+    keydownDecoder |> Decode.andThen keyToMsg
 
 
 type alias Keymap =
@@ -64,7 +79,7 @@ keymaps =
             , ( "ArrowRight", CursorRight )
             , ( "Backspace", RemoveCharBefore )
             , ( "Delete", RemoveCharAfter )
-            , ( "Enter", InsertChar '\n' )
+            , ( "Enter", Insert "\n" )
             , ( "Home", CursorToStartOfLine )
             , ( "End", CursorToEndOfLine )
             , ( "Tab", IncreaseIndent )
@@ -81,28 +96,32 @@ keymaps =
     }
 
 
-keyToMsg : Modifier -> String -> Decoder Msg
-keyToMsg modifier key =
-    case String.uncons key of
-        Just ( char, "" ) ->
-            Decode.succeed (InsertChar char)
+keyToMsg : Keydown -> Decoder Msg
+keyToMsg event =
+    let
+        keyFrom keymap =
+            Dict.get event.key keymap
+                |> Maybe.map Decode.succeed
+                |> Maybe.withDefault (Decode.fail "This key does nothing")
 
-        _ ->
-            let
-                keymap =
-                    case modifier of
-                        None ->
-                            keymaps.noModifier
+        keyOrCharFrom keymap =
+            Decode.oneOf
+                [ keyFrom keymap
+                , event.char
+                    |> Maybe.map (Insert >> Decode.succeed)
+                    |> Maybe.withDefault
+                        (Decode.fail "This key does nothing")
+                ]
+    in
+        case modifier event.ctrl event.shift of
+            None ->
+                keyOrCharFrom keymaps.noModifier
 
-                        Control ->
-                            keymaps.control
+            Control ->
+                keyFrom keymaps.control
 
-                        Shift ->
-                            keymaps.shift
+            Shift ->
+                keyOrCharFrom keymaps.noModifier
 
-                        ControlAndShift ->
-                            keymaps.controlAndShift
-            in
-                Dict.get key keymap
-                    |> Maybe.map Decode.succeed
-                    |> Maybe.withDefault (Decode.fail "This key does nothing")
+            ControlAndShift ->
+                keyFrom keymaps.controlAndShift
