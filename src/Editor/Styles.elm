@@ -46,10 +46,14 @@ styleText =
 
 .elm-editor-cursor {
   position: absolute;
-  border-left: 2px solid black;
+  border-left: 2px solid gray;
   left: 0;
   height: 100%;
+}
+
+.elm-editor-container:focus .elm-editor-cursor {
   animation: blink 0.5s infinite alternate steps(2, start);
+  border-left: 2px solid black;
 }
 
 @keyframes blink {
