@@ -17,6 +17,7 @@ type alias Keydown =
     , key : String
     , ctrl : Bool
     , shift : Bool
+    , alt : Bool
     }
 
 
@@ -53,6 +54,7 @@ keydownDecoder =
         (Decode.field "key" Decode.string)
         (Decode.field "ctrlKey" Decode.bool)
         (Decode.field "shiftKey" Decode.bool)
+        (Decode.field "altKey" Decode.bool)
 
 
 decoder : Decoder Msg
