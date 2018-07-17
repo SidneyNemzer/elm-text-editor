@@ -52,13 +52,16 @@ styleText =
 }
 
 .elm-editor-container:focus .elm-editor-cursor {
-  animation: blink 0.5s infinite alternate steps(2, start);
   border-left: 2px solid black;
+  animation: 1s blink step-start infinite;
 }
 
 @keyframes blink {
-  to {
+  from, to {
     opacity: 0;
+  }
+  50% {
+    opacity: 1;
   }
 }
 """
