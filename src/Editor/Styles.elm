@@ -18,6 +18,10 @@ styleText =
   user-select: none;
 }
 
+.elm-editor-container:focus {
+  outline: none;
+}
+
 .elm-editor-line {
   cursor: text;
 }
