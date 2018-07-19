@@ -82,8 +82,8 @@ keymaps =
             , ( "Backspace", RemoveCharBefore )
             , ( "Delete", RemoveCharAfter )
             , ( "Enter", Insert "\n" )
-            , ( "Home", CursorToStartOfLine )
-            , ( "End", CursorToEndOfLine )
+            , ( "Home", CursorToLineStart )
+            , ( "End", CursorToLineEnd )
             , ( "Tab", IncreaseIndent )
             ]
     , shift =

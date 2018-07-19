@@ -14,8 +14,8 @@ type Msg
     | CursorRight
     | CursorUp
     | CursorDown
-    | CursorToEndOfLine
-    | CursorToStartOfLine
+    | CursorToLineEnd
+    | CursorToLineStart
     | Insert String
     | RemoveCharAfter
     | RemoveCharBefore
@@ -148,7 +148,7 @@ update buffer msg state =
                 , Cmd.none
                 )
 
-            CursorToEndOfLine ->
+            CursorToLineEnd ->
                 ( { state
                     | cursor =
                         let
@@ -175,7 +175,7 @@ update buffer msg state =
                 , Cmd.none
                 )
 
-            CursorToStartOfLine ->
+            CursorToLineStart ->
                 ( { state
                     | cursor =
                         let
