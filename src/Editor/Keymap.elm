@@ -123,7 +123,7 @@ keyToMsg event =
                 keyFrom keymaps.control
 
             Shift ->
-                keyOrCharFrom keymaps.noModifier
+                keyOrCharFrom keymaps.shift
 
             ControlAndShift ->
                 keyFrom keymaps.controlAndShift
