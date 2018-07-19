@@ -67,8 +67,18 @@ update buffer msg state =
             CursorLeft ->
                 ( { state
                     | cursor =
-                        Position.previousColumn state.cursor
-                            |> clampPosition False lines
+                        let
+                            moveFrom =
+                                case state.selection of
+                                    Just selection ->
+                                        Position.order selection state.cursor
+                                            |> Tuple.first
+
+                                    Nothing ->
+                                        state.cursor
+                        in
+                            Position.previousColumn moveFrom
+                                |> clampPosition False lines
                     , selection = Nothing
                   }
                 , buffer
@@ -78,8 +88,18 @@ update buffer msg state =
             CursorRight ->
                 ( { state
                     | cursor =
-                        Position.nextColumn state.cursor
-                            |> clampPosition True lines
+                        let
+                            moveFrom =
+                                case state.selection of
+                                    Just selection ->
+                                        Position.order selection state.cursor
+                                            |> Tuple.second
+
+                                    Nothing ->
+                                        state.cursor
+                        in
+                            Position.nextColumn moveFrom
+                                |> clampPosition True lines
                     , selection = Nothing
                   }
                 , buffer
@@ -89,8 +109,18 @@ update buffer msg state =
             CursorUp ->
                 ( { state
                     | cursor =
-                        Position.previousLine state.cursor
-                            |> clampPosition False lines
+                        let
+                            moveFrom =
+                                case state.selection of
+                                    Just selection ->
+                                        Position.order selection state.cursor
+                                            |> Tuple.first
+
+                                    Nothing ->
+                                        state.cursor
+                        in
+                            Position.previousLine moveFrom
+                                |> clampPosition False lines
                     , selection = Nothing
                   }
                 , buffer
@@ -100,8 +130,18 @@ update buffer msg state =
             CursorDown ->
                 ( { state
                     | cursor =
-                        Position.nextLine state.cursor
-                            |> clampPosition False lines
+                        let
+                            moveFrom =
+                                case state.selection of
+                                    Just selection ->
+                                        Position.order selection state.cursor
+                                            |> Tuple.second
+
+                                    Nothing ->
+                                        state.cursor
+                        in
+                            Position.nextLine moveFrom
+                                |> clampPosition False lines
                     , selection = Nothing
                   }
                 , buffer
@@ -111,14 +151,24 @@ update buffer msg state =
             CursorToEndOfLine ->
                 ( { state
                     | cursor =
-                        case Array.get state.cursor.line lines of
-                            Just line ->
-                                Position.setColumn
-                                    (String.length line)
-                                    state.cursor
+                        let
+                            moveFrom =
+                                case state.selection of
+                                    Just selection ->
+                                        Position.order selection state.cursor
+                                            |> Tuple.second
 
-                            Nothing ->
-                                clampPosition False lines state.cursor
+                                    Nothing ->
+                                        state.cursor
+                        in
+                            case Array.get moveFrom.line lines of
+                                Just line ->
+                                    Position.setColumn
+                                        (String.length line)
+                                        state.cursor
+
+                                Nothing ->
+                                    clampPosition False lines state.cursor
                     , selection = Nothing
                   }
                 , buffer
@@ -127,7 +177,18 @@ update buffer msg state =
 
             CursorToStartOfLine ->
                 ( { state
-                    | cursor = Position.setColumn 0 state.cursor
+                    | cursor =
+                        let
+                            moveFrom =
+                                case state.selection of
+                                    Just selection ->
+                                        Position.order selection state.cursor
+                                            |> Tuple.first
+
+                                    Nothing ->
+                                        state.cursor
+                        in
+                            Position.setColumn 0 moveFrom
                     , selection = Nothing
                   }
                 , buffer
