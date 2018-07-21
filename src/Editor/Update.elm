@@ -20,6 +20,7 @@ type Msg
     | RemoveCharAfter
     | RemoveCharBefore
     | Indent
+    | Deindent
     | SelectUp
     | SelectDown
     | SelectLeft
@@ -318,6 +319,49 @@ update buffer msg state =
                                     Position.setColumn indentedColumn state.cursor
                               }
                             , indentedBuffer
+                            , Cmd.none
+                            )
+
+            Deindent ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
+                            ( { state
+                                | cursor =
+                                    Position.addColumn
+                                        -Buffer.indentSize
+                                        state.cursor
+                                , selection =
+                                    Just <|
+                                        Position.addColumn
+                                            -Buffer.indentSize
+                                            selection
+                              }
+                            , List.range (start.line + 1) (end.line - 1)
+                                |> List.foldl
+                                    (\line buffer ->
+                                        Buffer.deindentFrom
+                                            (Position line 0)
+                                            buffer
+                                            |> Tuple.first
+                                    )
+                                    buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        let
+                            ( deindentedBuffer, deindentedColumn ) =
+                                Buffer.deindentFrom state.cursor buffer
+                        in
+                            ( { state
+                                | cursor =
+                                    Position.setColumn deindentedColumn state.cursor
+                              }
+                            , deindentedBuffer
                             , Cmd.none
                             )
 

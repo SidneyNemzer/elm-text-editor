@@ -9,6 +9,7 @@ module Buffer.Basic
         , toString
         , indentFrom
         , indentSize
+        , deindentFrom
         )
 
 import List.Extra
@@ -126,6 +127,40 @@ indentFrom { line, column } (Buffer buffer) =
                             ++ String.repeat addIndentSize " "
                             ++ String.dropLeft (lineStart + column) buffer
                     , column + addIndentSize
+                    )
+            )
+        |> Maybe.withDefault ( Buffer buffer, column )
+
+
+{-| Deindent the given line from the given column. Returns the modified buffer and
+the column - indent size
+-}
+deindentFrom : Position -> Buffer -> ( Buffer, Int )
+deindentFrom { line, column } (Buffer buffer) =
+    -- count from lineStart up to indent char while char == indentChar
+    -- cut from lineStart to count
+    indexFromPosition buffer (Position line 0)
+        |> Maybe.map
+            (\lineStart ->
+                let
+                    startChars =
+                        String.slice lineStart (lineStart + indentSize) buffer
+
+                    startIndentChars =
+                        String.foldl
+                            (\char count ->
+                                if char == ' ' then
+                                    count + 1
+                                else
+                                    count
+                            )
+                            0
+                            startChars
+                in
+                    ( Buffer <|
+                        String.slice 0 lineStart buffer
+                            ++ String.dropLeft (lineStart + startIndentChars) buffer
+                    , column - startIndentChars
                     )
             )
         |> Maybe.withDefault ( Buffer buffer, column )
