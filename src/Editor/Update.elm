@@ -19,7 +19,7 @@ type Msg
     | Insert String
     | RemoveCharAfter
     | RemoveCharBefore
-    | IncreaseIndent
+    | Indent
     | SelectUp
     | SelectDown
     | SelectLeft
@@ -278,7 +278,7 @@ update buffer msg state =
                         , Cmd.none
                         )
 
-            IncreaseIndent ->
+            Indent ->
                 case state.selection of
                     Just selection ->
                         let

@@ -84,7 +84,7 @@ keymaps =
             , ( "Enter", Insert "\n" )
             , ( "Home", CursorToLineStart )
             , ( "End", CursorToLineEnd )
-            , ( "Tab", IncreaseIndent )
+            , ( "Tab", Indent )
             ]
     , shift =
         Dict.fromList
