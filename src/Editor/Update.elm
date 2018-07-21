@@ -3,7 +3,7 @@ module Editor.Update exposing (Msg(..), update)
 import Array exposing (Array)
 import Position exposing (Position)
 import Editor.Model exposing (InternalState)
-import Buffer.Basic as Buffer exposing (Buffer)
+import Buffer exposing (Buffer)
 
 
 type Msg

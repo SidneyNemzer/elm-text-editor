@@ -1,4 +1,4 @@
-module Buffer.Basic
+module Buffer
     exposing
         ( Buffer
         , init

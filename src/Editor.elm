@@ -6,7 +6,7 @@ import Position exposing (Position)
 import Editor.Model exposing (InternalState)
 import Editor.Update
 import Editor.View
-import Buffer.Basic as Buffer exposing (Buffer)
+import Buffer exposing (Buffer)
 
 
 type alias Msg =

@@ -5,7 +5,7 @@ import Html exposing (div, textarea, text)
 import Html.Events as Event exposing (onInput)
 import Editor
 import Editor.Styles
-import Buffer.Basic as Buffer exposing (Buffer)
+import Buffer exposing (Buffer)
 
 
 main : Program Never Model Msg
