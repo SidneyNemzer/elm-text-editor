@@ -25,6 +25,8 @@ type Msg
     | SelectDown
     | SelectLeft
     | SelectRight
+    | SelectToLineStart
+    | SelectToLineEnd
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -420,6 +422,38 @@ update buffer msg state =
                             Just state.cursor
                         else
                             state.selection
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            SelectToLineStart ->
+                ( { state
+                    | cursor = Position.setColumn 0 state.cursor
+                    , selection =
+                        state.selection
+                            |> Maybe.withDefault state.cursor
+                            |> Just
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            SelectToLineEnd ->
+                ( { state
+                    | cursor =
+                        case Array.get state.cursor.line lines of
+                            Just line ->
+                                Position.setColumn
+                                    (String.length line)
+                                    state.cursor
+
+                            Nothing ->
+                                clampPosition False lines state.cursor
+                    , selection =
+                        state.selection
+                            |> Maybe.withDefault state.cursor
+                            |> Just
                   }
                 , buffer
                 , Cmd.none

@@ -93,6 +93,8 @@ keymaps =
             , ( "ArrowLeft", SelectLeft )
             , ( "ArrowRight", SelectRight )
             , ( "Tab", Deindent )
+            , ( "Home", SelectToLineStart )
+            , ( "End", SelectToLineEnd )
             ]
     , control = Dict.empty
     , controlAndShift = Dict.empty
