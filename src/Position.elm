@@ -7,6 +7,7 @@ module Position
         , nextColumn
         , previousColumn
         , setColumn
+        , addLine
         , nextLine
         , previousLine
         )
