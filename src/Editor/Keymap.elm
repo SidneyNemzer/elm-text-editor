@@ -102,6 +102,7 @@ keymaps =
             , ( "ArrowLeft", CursorToGroupStart )
             , ( "Backspace", RemoveGroupBefore )
             , ( "Delete", RemoveGroupAfter )
+            , ( "a", SelectAll )
             ]
     , controlAndShift = Dict.empty
     }

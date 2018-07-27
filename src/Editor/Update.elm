@@ -31,6 +31,7 @@ type Msg
     | SelectRight
     | SelectToLineStart
     | SelectToLineEnd
+    | SelectAll
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -526,6 +527,22 @@ update buffer msg state =
                         state.selection
                             |> Maybe.withDefault state.cursor
                             |> Just
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            SelectAll ->
+                ( { state
+                    | cursor =
+                        case arrayLast lines of
+                            Just ( line, index ) ->
+                                Position index (String.length line)
+
+                            Nothing ->
+                                -- impossible, there is always at least one line
+                                state.cursor
+                    , selection = Just (Position 0 0)
                   }
                 , buffer
                 , Cmd.none
