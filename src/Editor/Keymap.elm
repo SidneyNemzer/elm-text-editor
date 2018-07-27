@@ -96,7 +96,13 @@ keymaps =
             , ( "Home", SelectToLineStart )
             , ( "End", SelectToLineEnd )
             ]
-    , control = Dict.empty
+    , control =
+        Dict.fromList
+            [ ( "ArrowRight", CursorToGroupEnd )
+            , ( "ArrowLeft", CursorToGroupStart )
+            , ( "Backspace", RemoveGroupBefore )
+            , ( "Delete", RemoveGroupAfter )
+            ]
     , controlAndShift = Dict.empty
     }
 

@@ -10,6 +10,8 @@ module Buffer
         , indentFrom
         , indentSize
         , deindentFrom
+        , groupEnd
+        , groupStart
         )
 
 import List.Extra
@@ -164,3 +166,149 @@ deindentFrom { line, column } (Buffer buffer) =
                     )
             )
         |> Maybe.withDefault ( Buffer buffer, column )
+
+
+isWhitespace : Char -> Bool
+isWhitespace =
+    String.fromChar >> String.trim >> (==) ""
+
+
+isNonWordChar : Char -> Bool
+isNonWordChar =
+    String.fromChar >> (flip String.contains) "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-…"
+
+
+type Group
+    = None
+    | Word
+    | NonWord
+
+
+type Direction
+    = Forward
+    | Backward
+
+
+{-| Start at the position and move in the direction using the following rules:
+
+  - Skip consecutive whitespace. Skip a single newline if it follows the whitespace,
+    then continue skipping whitespace.
+  - If the next character is a newline, stop
+  - If the next character is a non-word character, skip consecutive non-word characters
+  - If the next character is a word character, skip consecutive word characters
+
+-}
+groupHelp : Direction -> Bool -> String -> Position -> Group -> Position
+groupHelp direction consumedNewline string position group =
+    let
+        parts =
+            case direction of
+                Forward ->
+                    String.uncons string
+
+                Backward ->
+                    String.uncons (String.reverse string)
+                        |> Maybe.map (Tuple.mapSecond String.reverse)
+    in
+        case parts of
+            Just ( char, rest ) ->
+                let
+                    nextPosition changeLine =
+                        case direction of
+                            Forward ->
+                                if changeLine then
+                                    Position (position.line + 1) 0
+                                else
+                                    Position.nextColumn position
+
+                            Backward ->
+                                if changeLine then
+                                    if String.contains "\n" rest then
+                                        Position
+                                            (position.line - 1)
+                                            (String.Extra.rightOfBack "\n" rest
+                                                |> String.length
+                                            )
+                                    else
+                                        Position
+                                            (position.line - 1)
+                                            (String.length rest)
+                                else
+                                    Position.previousColumn position
+
+                    next nextConsumedNewline =
+                        groupHelp
+                            direction
+                            nextConsumedNewline
+                            rest
+                            (nextPosition
+                                (consumedNewline /= nextConsumedNewline)
+                            )
+                in
+                    case group of
+                        None ->
+                            if char == '\n' then
+                                if consumedNewline then
+                                    position
+                                else
+                                    next True None
+                            else if isWhitespace char then
+                                next consumedNewline None
+                            else if isNonWordChar char then
+                                next consumedNewline NonWord
+                            else
+                                next consumedNewline Word
+
+                        Word ->
+                            if
+                                char
+                                    == '\n'
+                                    || isWhitespace char
+                                    || isNonWordChar char
+                            then
+                                position
+                            else
+                                next consumedNewline Word
+
+                        NonWord ->
+                            if isNonWordChar char then
+                                next consumedNewline Word
+                            else
+                                position
+
+            Nothing ->
+                position
+
+
+{-| Start at the position and move right using the following rules:
+
+  - Skip consecutive whitespace. Skip a single newline if it follows the whitespace,
+    then continue skipping whitespace.
+  - If the next character is a newline, stop
+  - If the next character is a non-word character, skip consecutive non-word characters
+  - If the next character is a word character, skip consecutive word characters
+
+-}
+groupEnd : Position -> Buffer -> Position
+groupEnd position (Buffer buffer) =
+    indexFromPosition buffer position
+        |> Maybe.map
+            (\index -> groupHelp Forward False (String.dropLeft index buffer) position None)
+        |> Maybe.withDefault position
+
+
+{-| Start at the position and move left. See the rules for `groupEnd`.
+-}
+groupStart : Position -> Buffer -> Position
+groupStart position (Buffer buffer) =
+    indexFromPosition buffer position
+        |> Maybe.map
+            (\index ->
+                groupHelp
+                    Backward
+                    False
+                    (String.slice 0 index buffer)
+                    position
+                    None
+            )
+        |> Maybe.withDefault position

@@ -16,9 +16,13 @@ type Msg
     | CursorDown
     | CursorToLineEnd
     | CursorToLineStart
+    | CursorToGroupEnd
+    | CursorToGroupStart
     | Insert String
     | RemoveCharAfter
     | RemoveCharBefore
+    | RemoveGroupAfter
+    | RemoveGroupBefore
     | Indent
     | Deindent
     | SelectUp
@@ -198,6 +202,24 @@ update buffer msg state =
                 , Cmd.none
                 )
 
+            CursorToGroupEnd ->
+                ( { state
+                    | cursor = Buffer.groupEnd state.cursor buffer
+                    , selection = Nothing
+                  }
+                , buffer
+                , Cmd.none
+                )
+
+            CursorToGroupStart ->
+                ( { state
+                    | cursor = Buffer.groupStart state.cursor buffer
+                    , selection = Nothing
+                  }
+                , buffer
+                , Cmd.none
+                )
+
             Insert string ->
                 case state.selection of
                     Just selection ->
@@ -280,6 +302,56 @@ update buffer msg state =
                         , Buffer.removeBefore state.cursor buffer
                         , Cmd.none
                         )
+
+            RemoveGroupAfter ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
+                            ( { state
+                                | cursor = start
+                                , selection = Nothing
+                              }
+                            , Buffer.replace start end "" buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        let
+                            end =
+                                Buffer.groupEnd state.cursor buffer
+                        in
+                            ( state
+                            , Buffer.replace state.cursor end "" buffer
+                            , Cmd.none
+                            )
+
+            RemoveGroupBefore ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
+                            ( { state
+                                | cursor = start
+                                , selection = Nothing
+                              }
+                            , Buffer.replace start end "" buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        let
+                            start =
+                                Buffer.groupStart state.cursor buffer
+                        in
+                            ( { state | cursor = start }
+                            , Buffer.replace start state.cursor "" buffer
+                            , Cmd.none
+                            )
 
             Indent ->
                 case state.selection of
