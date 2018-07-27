@@ -104,7 +104,11 @@ keymaps =
             , ( "Delete", RemoveGroupAfter )
             , ( "a", SelectAll )
             ]
-    , controlAndShift = Dict.empty
+    , controlAndShift =
+        Dict.fromList
+            [ ( "ArrowRight", SelectToGroupEnd )
+            , ( "ArrowLeft", SelectToGroupStart )
+            ]
     }
 
 

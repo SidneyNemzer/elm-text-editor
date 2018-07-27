@@ -31,6 +31,8 @@ type Msg
     | SelectRight
     | SelectToLineStart
     | SelectToLineEnd
+    | SelectToGroupStart
+    | SelectToGroupEnd
     | SelectAll
 
 
@@ -531,6 +533,54 @@ update buffer msg state =
                 , buffer
                 , Cmd.none
                 )
+
+            SelectToGroupStart ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
+                            ( { state
+                                | cursor = Buffer.groupStart start buffer
+                                , selection = Just start
+                              }
+                            , buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        ( { state
+                            | cursor = Buffer.groupStart state.cursor buffer
+                            , selection = Just state.cursor
+                          }
+                        , buffer
+                        , Cmd.none
+                        )
+
+            SelectToGroupEnd ->
+                case state.selection of
+                    Just selection ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+                        in
+                            ( { state
+                                | cursor = Buffer.groupEnd end buffer
+                                , selection = Just end
+                              }
+                            , buffer
+                            , Cmd.none
+                            )
+
+                    Nothing ->
+                        ( { state
+                            | cursor = Buffer.groupEnd state.cursor buffer
+                            , selection = Just state.cursor
+                          }
+                        , buffer
+                        , Cmd.none
+                        )
 
             SelectAll ->
                 ( { state
