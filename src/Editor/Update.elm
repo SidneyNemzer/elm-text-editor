@@ -4,6 +4,7 @@ import Array exposing (Array)
 import Position exposing (Position)
 import Editor.Model exposing (InternalState)
 import Buffer exposing (Buffer)
+import Util.Array
 
 
 type Msg
@@ -668,7 +669,7 @@ update buffer msg state =
             SelectAll ->
                 ( { state
                     | cursor =
-                        case arrayLast lines of
+                        case Util.Array.last lines of
                             Just ( line, index ) ->
                                 Position index (String.length line)
 
@@ -682,15 +683,6 @@ update buffer msg state =
                 )
 
 
-arrayLast : Array a -> Maybe ( a, Int )
-arrayLast array =
-    let
-        length =
-            Array.length array
-    in
-        Array.slice -1 length array
-            |> Array.get 0
-            |> Maybe.map (\a -> ( a, length - 1 ))
 
 
 clampPosition : Bool -> Array String -> Position -> Position
@@ -720,7 +712,7 @@ clampPosition preferNextLine lines position =
                     position
 
             Nothing ->
-                case arrayLast lines of
+                case Util.Array.last lines of
                     Just ( line, number ) ->
                         Position number (String.length line)
 
