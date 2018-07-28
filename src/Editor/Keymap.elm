@@ -103,6 +103,7 @@ keymaps =
             , ( "Backspace", RemoveGroupBefore )
             , ( "Delete", RemoveGroupAfter )
             , ( "a", SelectAll )
+            , ( "d", SelectGroup )
             ]
     , controlAndShift =
         Dict.fromList

@@ -35,6 +35,7 @@ type Msg
     | SelectToGroupStart
     | SelectToGroupEnd
     | SelectAll
+    | SelectGroup
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -681,6 +682,21 @@ update buffer msg state =
                 , buffer
                 , Cmd.none
                 )
+
+            SelectGroup ->
+                let
+                    range =
+                        Buffer.groupRange state.cursor buffer
+                in
+                    case range of
+                        Just ( start, end ) ->
+                            ( { state | cursor = end, selection = Just start }
+                            , buffer
+                            , Cmd.none
+                            )
+
+                        Nothing ->
+                            ( state, buffer, Cmd.none )
 
 
 {-| Make sure the cursor is at a valid positon in the buffer.

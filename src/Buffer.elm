@@ -12,10 +12,12 @@ module Buffer
         , deindentFrom
         , groupEnd
         , groupStart
+        , groupRange
         )
 
 import List.Extra
 import String.Extra
+import Maybe.Extra
 import Position exposing (Position)
 
 
@@ -317,3 +319,81 @@ groupStart position (Buffer buffer) =
                     None
             )
         |> Maybe.withDefault position
+
+
+stringCharAt : Int -> String -> Maybe Char
+stringCharAt index string =
+    String.slice index (index + 1) string
+        |> String.uncons
+        |> Maybe.map Tuple.first
+
+
+charsAround : Int -> String -> ( Maybe Char, Maybe Char, Maybe Char )
+charsAround index string =
+    ( stringCharAt (index - 1) string
+    , stringCharAt index string
+    , stringCharAt (index + 1) string
+    )
+
+
+tuple3MapAll : (a -> b) -> ( a, a, a ) -> ( b, b, b )
+tuple3MapAll fn ( a1, a2, a3 ) =
+    ( fn a1, fn a2, fn a3 )
+
+
+tuple3CharsPred :
+    (Char -> Bool)
+    -> ( Maybe Char, Maybe Char, Maybe Char )
+    -> ( Bool, Bool, Bool )
+tuple3CharsPred pred =
+    tuple3MapAll (Maybe.map pred >> Maybe.withDefault False)
+
+
+{-| If the position is in the middle or on the edge of a group, the edges of the
+group are returned. Otherwise `Nothing` is returned.
+-}
+groupRange : Position -> Buffer -> Maybe ( Position, Position )
+groupRange position (Buffer buffer) =
+    indexFromPosition buffer position
+        |> Maybe.andThen
+            (\index ->
+                let
+                    chars =
+                        charsAround index buffer
+
+                    range pred =
+                        case tuple3CharsPred pred chars of
+                            ( True, True, True ) ->
+                                Just
+                                    ( groupStart position (Buffer buffer)
+                                    , groupEnd position (Buffer buffer)
+                                    )
+
+                            ( False, True, True ) ->
+                                Just
+                                    ( position
+                                    , groupEnd position (Buffer buffer)
+                                    )
+
+                            ( True, True, False ) ->
+                                Just
+                                    ( groupStart position (Buffer buffer)
+                                    , Position.nextColumn position
+                                    )
+
+                            ( True, False, _ ) ->
+                                Just
+                                    ( groupStart position (Buffer buffer)
+                                    , position
+                                    )
+
+                            ( False, True, False ) ->
+                                Just
+                                    ( position, Position.nextColumn position )
+
+                            _ ->
+                                Nothing
+                in
+                    range isWordChar
+                        |> Maybe.Extra.orElseLazy (\() -> range isNonWordChar)
+            )
