@@ -40,17 +40,6 @@ listMapAt fn index list =
         |> Maybe.withDefault list
 
 
-insert : Position -> String -> Buffer -> Buffer
-insert { line, column } string (Buffer buffer) =
-    -- I think this could be done more efficiently with a fold; count newlines until
-    -- line, then count characters until column. Insert the char, then do nothing to
-    -- the rest of the buffer
-    String.lines buffer
-        |> listMapAt (String.Extra.insertAt string column) line
-        |> String.join "\n"
-        |> Buffer
-
-
 indexFromPosition : String -> Position -> Maybe Int
 indexFromPosition buffer position =
     -- Doesn't validate columns, only lines
@@ -60,6 +49,14 @@ indexFromPosition buffer position =
         String.indexes "\n" buffer
             |> List.Extra.getAt (position.line - 1)
             |> Maybe.map (\line -> line + position.column + 1)
+
+
+insert : Position -> String -> Buffer -> Buffer
+insert position string (Buffer buffer) =
+    indexFromPosition buffer position
+        |> Maybe.map (\index -> String.Extra.insertAt string index buffer)
+        |> Maybe.withDefault buffer
+        |> Buffer
 
 
 replace : Position -> Position -> String -> Buffer -> Buffer
