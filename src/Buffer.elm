@@ -179,6 +179,11 @@ isNonWordChar =
     String.fromChar >> (flip String.contains) "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-…"
 
 
+isWordChar : Char -> Bool
+isWordChar char =
+    not (isNonWordChar char) && not (isWhitespace char)
+
+
 type Group
     = None
     | Word
@@ -263,12 +268,7 @@ groupHelp direction consumedNewline string position group =
                                 next consumedNewline Word
 
                         Word ->
-                            if
-                                char
-                                    == '\n'
-                                    || isWhitespace char
-                                    || isNonWordChar char
-                            then
+                            if not (isWordChar char) then
                                 position
                             else
                                 next consumedNewline Word
