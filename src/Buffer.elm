@@ -195,8 +195,10 @@ type Direction
   - Skip consecutive whitespace. Skip a single newline if it follows the whitespace,
     then continue skipping whitespace.
   - If the next character is a newline, stop
-  - If the next character is a non-word character, skip consecutive non-word characters
+  - If the next character is a non-word character, skip consecutive non-word
+    characters then stop
   - If the next character is a word character, skip consecutive word characters
+    then stop
 
 -}
 groupHelp : Direction -> Bool -> String -> Position -> Group -> Position
@@ -286,8 +288,10 @@ groupHelp direction consumedNewline string position group =
   - Skip consecutive whitespace. Skip a single newline if it follows the whitespace,
     then continue skipping whitespace.
   - If the next character is a newline, stop
-  - If the next character is a non-word character, skip consecutive non-word characters
+  - If the next character is a non-word character, skip consecutive non-word
+    characters then stop
   - If the next character is a word character, skip consecutive word characters
+    then stop
 
 -}
 groupEnd : Position -> Buffer -> Position
