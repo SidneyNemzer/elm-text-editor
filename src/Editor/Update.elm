@@ -683,15 +683,24 @@ update buffer msg state =
                 )
 
 
+{-| Make sure the cursor is at a valid positon in the buffer.
 
+If the cursor is:
 
+    - before the first line, move to the first column of the first line
+    - after the last line, move to the last column of the last line
+    - past the last column of the line, if we should perfer the next line, go
+      to the first column of the next line. Otherwise, go to the last column
+      of the current line.
+    - before the first column of the line, go to the last column of the previous
+      line.
+
+The first argument, `perferNextLine`, is used if we want to move to the right
+in the buffer.
+
+-}
 clampPosition : Bool -> Array String -> Position -> Position
 clampPosition preferNextLine lines position =
-    -- line is less than first line -> first column first line
-    -- line doesn't exist -> last column last line
-    -- column is greater than line ->
-    -- perferNextLine ? first column next line : last column of line
-    -- column is less than 0 -> last column of previous line
     if position.line < 0 then
         Position 0 0
     else

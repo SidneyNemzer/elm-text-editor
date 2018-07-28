@@ -28,6 +28,8 @@ indentSize =
     2
 
 
+{-| Create a new buffer from a string
+-}
 init : String -> Buffer
 init content =
     Buffer content
@@ -104,7 +106,9 @@ toString (Buffer buffer) =
 
 
 {-| Indent the given line from the given column. Returns the modified buffer and
-the column + indent size
+the `column + indentedSize`. It accepts a position rather than a line because the
+behavior depends on the column. It moves everything after the column to be
+aligned with the indent size, content before the column is not moved.
 -}
 indentFrom : Position -> Buffer -> ( Buffer, Int )
 indentFrom { line, column } (Buffer buffer) =
@@ -129,13 +133,15 @@ indentFrom { line, column } (Buffer buffer) =
         |> Maybe.withDefault ( Buffer buffer, column )
 
 
-{-| Deindent the given line from the given column. Returns the modified buffer and
-the column - indent size
+{-| Deindent the given line. Returns the modified buffer and the column
+`minus - deindentedSize`. Unlike `indent`, `deindent` will deindent all the
+content in the line, regardless of `position.column`. *Why not just accept a
+line then?*, you say. Well, the line might be close to the left, so it won't
+deindent the full `indentSize` -- in that case, it's important to know the new
+column.
 -}
 deindentFrom : Position -> Buffer -> ( Buffer, Int )
 deindentFrom { line, column } (Buffer buffer) =
-    -- count from lineStart up to indent char while char == indentChar
-    -- cut from lineStart to count
     indexFromPosition buffer (Position line 0)
         |> Maybe.map
             (\lineStart ->
@@ -292,7 +298,7 @@ groupEnd position (Buffer buffer) =
         |> Maybe.withDefault position
 
 
-{-| Start at the position and move left. See the rules for `groupEnd`.
+{-| Start at the position and move left. Uses the same rules as `groupEnd`.
 -}
 groupStart : Position -> Buffer -> Position
 groupStart position (Buffer buffer) =
