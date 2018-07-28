@@ -1,6 +1,5 @@
 module Editor exposing (State, Msg, init, update, view)
 
-import Array
 import Html exposing (Html)
 import Position exposing (Position)
 import Editor.Model exposing (InternalState)
