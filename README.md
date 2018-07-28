@@ -33,7 +33,11 @@ The buffer implementation has helper functions for manipulating its content, lik
 - [ ] open decorations (in other words, decorations exist in the buffer but each editor tracks open decorations)
 - [ ] line wrap
 
-This project is missing many of the features of Ace and CodeMirror, but Ace and CodeMirror have had quite a headstart... about 7 years.
+This project is missing many of the features of Ace and CodeMirror, but Ace and CodeMirror have had quite a head start about 7 years.
+
+### Shortcuts
+
+The keyboard shortcuts are mostly based on [Atom][]'s shortcuts (because that's the editor I use day to day, so I know the shortcuts pretty well).
 
 ## Previous work and Inspiration
 
@@ -44,6 +48,7 @@ This project is missing many of the features of Ace and CodeMirror, but Ace and 
 > I hope this inspires somebody to try do some stuff in Elm they’ve been needing but seemed too big / hard for them! You might, like me with this project, find out it’s in your reach - no doubt thanks to Elm  
 > *- Janiczek*
 
+[Atom]: https://atom.io
 [Ace]: https://ace.c9.io
 [CodeMirror]: https://codemirror.net
 [Janiczek]: https://github.com/Janiczek
