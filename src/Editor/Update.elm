@@ -58,11 +58,17 @@ update buffer msg state =
                     ( { state
                         | selection =
                             case state.selection of
-                                Just position ->
-                                    Just position
+                                Just selection ->
+                                    if selection == position then
+                                        Nothing
+                                    else
+                                        Just selection
 
                                 Nothing ->
-                                    Just state.cursor
+                                    if position == state.cursor then
+                                        Nothing
+                                    else
+                                        Just state.cursor
                         , cursor = position
                       }
                     , buffer
@@ -443,80 +449,123 @@ update buffer msg state =
                             )
 
             SelectUp ->
-                ( { state
-                    | cursor =
+                let
+                    cursor =
                         Position.previousLine state.cursor
                             |> clampPosition False lines
-                    , selection =
-                        if state.selection == Nothing then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+                in
+                    ( { state
+                        | cursor = cursor
+                        , selection =
+                            if
+                                (state.selection == Just cursor)
+                                    || (state.cursor == cursor)
+                            then
+                                Nothing
+                            else if state.selection == Nothing then
+                                Just state.cursor
+                            else
+                                state.selection
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
             SelectDown ->
-                ( { state
-                    | cursor =
+                let
+                    cursor =
                         Position.nextLine state.cursor
                             |> clampPosition False lines
-                    , selection =
-                        if state.selection == Nothing then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+                in
+                    ( { state
+                        | cursor = cursor
+                        , selection =
+                            if
+                                (state.selection == Just cursor)
+                                    || (state.cursor == cursor)
+                            then
+                                Nothing
+                            else if state.selection == Nothing then
+                                Just state.cursor
+                            else
+                                state.selection
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
             SelectLeft ->
-                ( { state
-                    | cursor =
+                let
+                    cursor =
                         Position.previousColumn state.cursor
                             |> clampPosition False lines
-                    , selection =
-                        if state.selection == Nothing then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+                in
+                    ( { state
+                        | cursor = cursor
+                        , selection =
+                            if
+                                (state.selection == Just cursor)
+                                    || (state.cursor == cursor)
+                            then
+                                Nothing
+                            else if state.selection == Nothing then
+                                Just state.cursor
+                            else
+                                state.selection
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
             SelectRight ->
-                ( { state
-                    | cursor =
+                let
+                    cursor =
                         Position.nextColumn state.cursor
                             |> clampPosition True lines
-                    , selection =
-                        if state.selection == Nothing then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+                in
+                    ( { state
+                        | cursor = cursor
+                        , selection =
+                            if
+                                (state.selection == Just cursor)
+                                    || (state.cursor == cursor)
+                            then
+                                Nothing
+                            else if state.selection == Nothing then
+                                Just state.cursor
+                            else
+                                state.selection
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
             SelectToLineStart ->
-                ( { state
-                    | cursor = Position.setColumn 0 state.cursor
-                    , selection =
-                        state.selection
-                            |> Maybe.withDefault state.cursor
-                            |> Just
-                  }
-                , buffer
-                , Cmd.none
-                )
+                let
+                    cursor =
+                        Position.setColumn 0 state.cursor
+                in
+                    ( { state
+                        | cursor = cursor
+                        , selection =
+                            state.selection
+                                |> Maybe.withDefault state.cursor
+                                |> Just
+                                |> Maybe.andThen
+                                    (\selection ->
+                                        if selection == cursor then
+                                            Nothing
+                                        else
+                                            Just selection
+                                    )
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
             SelectToLineEnd ->
-                ( { state
-                    | cursor =
+                let
+                    cursor =
                         case Array.get state.cursor.line lines of
                             Just line ->
                                 Position.setColumn
@@ -525,14 +574,24 @@ update buffer msg state =
 
                             Nothing ->
                                 clampPosition False lines state.cursor
-                    , selection =
-                        state.selection
-                            |> Maybe.withDefault state.cursor
-                            |> Just
-                  }
-                , buffer
-                , Cmd.none
-                )
+                in
+                    ( { state
+                        | cursor = cursor
+                        , selection =
+                            state.selection
+                                |> Maybe.withDefault state.cursor
+                                |> Just
+                                |> Maybe.andThen
+                                    (\selection ->
+                                        if selection == cursor then
+                                            Nothing
+                                        else
+                                            Just selection
+                                    )
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
             SelectToGroupStart ->
                 case state.selection of
@@ -543,20 +602,32 @@ update buffer msg state =
                         in
                             ( { state
                                 | cursor = Buffer.groupStart start buffer
-                                , selection = Just start
+                                , selection =
+                                    if start == end then
+                                        Nothing
+                                    else
+                                        Just start
                               }
                             , buffer
                             , Cmd.none
                             )
 
                     Nothing ->
-                        ( { state
-                            | cursor = Buffer.groupStart state.cursor buffer
-                            , selection = Just state.cursor
-                          }
-                        , buffer
-                        , Cmd.none
-                        )
+                        let
+                            cursor =
+                                Buffer.groupStart state.cursor buffer
+                        in
+                            ( { state
+                                | cursor = cursor
+                                , selection =
+                                    if state.cursor == cursor then
+                                        Nothing
+                                    else
+                                        Just state.cursor
+                              }
+                            , buffer
+                            , Cmd.none
+                            )
 
             SelectToGroupEnd ->
                 case state.selection of
@@ -567,20 +638,32 @@ update buffer msg state =
                         in
                             ( { state
                                 | cursor = Buffer.groupEnd end buffer
-                                , selection = Just end
+                                , selection =
+                                    if start == end then
+                                        Nothing
+                                    else
+                                        Just end
                               }
                             , buffer
                             , Cmd.none
                             )
 
                     Nothing ->
-                        ( { state
-                            | cursor = Buffer.groupEnd state.cursor buffer
-                            , selection = Just state.cursor
-                          }
-                        , buffer
-                        , Cmd.none
-                        )
+                        let
+                            cursor =
+                                Buffer.groupEnd state.cursor buffer
+                        in
+                            ( { state
+                                | cursor = cursor
+                                , selection =
+                                    if state.cursor == cursor then
+                                        Nothing
+                                    else
+                                        Just state.cursor
+                              }
+                            , buffer
+                            , Cmd.none
+                            )
 
             SelectAll ->
                 ( { state
