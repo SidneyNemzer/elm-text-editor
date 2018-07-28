@@ -60,13 +60,11 @@ insert position string (Buffer buffer) =
 
 
 replace : Position -> Position -> String -> Buffer -> Buffer
-replace start end string (Buffer buffer) =
-    if
-        (start.line > end.line)
-            || (start.line == end.line && start.column > end.column)
-    then
-        replace end start string (Buffer buffer)
-    else
+replace pos1 pos2 string (Buffer buffer) =
+    let
+        ( start, end ) =
+            Position.order pos1 pos2
+    in
         Maybe.map2
             (\startIndex endIndex ->
                 String.slice 0 startIndex buffer
