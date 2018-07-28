@@ -275,7 +275,7 @@ groupHelp direction consumedNewline string position group =
 
                         NonWord ->
                             if isNonWordChar char then
-                                next consumedNewline Word
+                                next consumedNewline NonWord
                             else
                                 position
 
