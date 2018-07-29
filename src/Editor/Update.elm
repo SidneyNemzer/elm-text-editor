@@ -36,6 +36,7 @@ type Msg
     | SelectToGroupEnd
     | SelectAll
     | SelectGroup
+    | SelectLine
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -568,14 +569,11 @@ update buffer msg state =
             SelectToLineEnd ->
                 let
                     cursor =
-                        case Array.get state.cursor.line lines of
-                            Just line ->
-                                Position.setColumn
-                                    (String.length line)
-                                    state.cursor
-
-                            Nothing ->
-                                clampPosition False lines state.cursor
+                        Position.setColumn
+                            (Buffer.lineEnd state.cursor.line buffer
+                                |> Maybe.withDefault state.cursor.line
+                            )
+                            state.cursor
                 in
                     ( { state
                         | cursor = cursor
@@ -697,6 +695,21 @@ update buffer msg state =
 
                         Nothing ->
                             ( state, buffer, Cmd.none )
+
+            SelectLine ->
+                ( { state
+                    | cursor =
+                        Buffer.lineEnd state.cursor.line buffer
+                            |> Maybe.map
+                                (\column ->
+                                    Position.setColumn column state.cursor
+                                )
+                            |> Maybe.withDefault state.cursor
+                    , selection = Just <| Position.setColumn 0 state.cursor
+                  }
+                , buffer
+                , Cmd.none
+                )
 
 
 {-| Make sure the cursor is at a valid positon in the buffer.

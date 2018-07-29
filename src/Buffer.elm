@@ -13,6 +13,7 @@ module Buffer
         , groupEnd
         , groupStart
         , groupRange
+        , lineEnd
         )
 
 import List.Extra
@@ -397,3 +398,8 @@ groupRange position (Buffer buffer) =
                     range isWordChar
                         |> Maybe.Extra.orElseLazy (\() -> range isNonWordChar)
             )
+
+
+lineEnd : Int -> Buffer -> Maybe Int
+lineEnd line =
+    lines >> List.Extra.getAt line >> Maybe.map String.length

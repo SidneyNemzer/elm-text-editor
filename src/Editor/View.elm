@@ -125,6 +125,21 @@ line cursor selection number content =
             ]
 
 
+onTripleClick : msg -> Attribute msg
+onTripleClick msg =
+    Event.on
+        "click"
+        (Decode.field "detail" Decode.int
+            |> Decode.andThen
+                (\detail ->
+                    if detail >= 3 then
+                        Decode.succeed msg
+                    else
+                        Decode.fail ""
+                )
+        )
+
+
 view : List String -> InternalState -> Html Msg
 view lines state =
     div
@@ -134,6 +149,8 @@ view lines state =
             { preventDefault = True, stopPropagation = False }
             Editor.Keymap.decoder
         , Event.onMouseUp MouseUp
+        , Event.onDoubleClick SelectGroup
+        , onTripleClick SelectLine
         , Attribute.tabindex 0
         ]
     <|
