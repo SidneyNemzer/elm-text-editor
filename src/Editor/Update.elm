@@ -1,5 +1,6 @@
 module Editor.Update exposing (Msg(..), update)
 
+import Dict exposing (Dict)
 import Array exposing (Array)
 import Position exposing (Position)
 import Editor.Model exposing (InternalState)
@@ -37,6 +38,18 @@ type Msg
     | SelectAll
     | SelectGroup
     | SelectLine
+
+
+autoclose : Dict String String
+autoclose =
+    Dict.fromList
+        [ ( "[", "]" )
+        , ( "{", "}" )
+        , ( "(", ")" )
+        , ( "\"", "\"" )
+        , ( "'", "'" )
+        , ( "`", "`" )
+        ]
 
 
 update : Buffer -> Msg -> InternalState -> ( InternalState, Buffer, Cmd Msg )
@@ -239,17 +252,40 @@ update buffer msg state =
                             ( start, end ) =
                                 Position.order selection state.cursor
                         in
-                            ( { state
-                                | cursor =
-                                    if string == "\n" then
-                                        { line = start.line + 1, column = 0 }
-                                    else
-                                        start
-                                , selection = Nothing
-                              }
-                            , Buffer.replace start end string buffer
-                            , Cmd.none
-                            )
+                            case Dict.get string autoclose of
+                                Just closing ->
+                                    ( { state
+                                        | cursor =
+                                            Position.nextColumn state.cursor
+                                        , selection =
+                                            Just <|
+                                                if selection.line == start.line then
+                                                    Position.nextColumn selection
+                                                else
+                                                    selection
+                                      }
+                                    , Buffer.insert start string Dict.empty buffer
+                                        |> Buffer.insert
+                                            (Position.nextColumn end)
+                                            closing
+                                            Dict.empty
+                                    , Cmd.none
+                                    )
+
+                                Nothing ->
+                                    ( { state
+                                        | cursor =
+                                            if string == "\n" then
+                                                { line = start.line + 1
+                                                , column = 0
+                                                }
+                                            else
+                                                start
+                                        , selection = Nothing
+                                      }
+                                    , Buffer.replace start end string buffer
+                                    , Cmd.none
+                                    )
 
                     Nothing ->
                         ( { state
@@ -259,7 +295,7 @@ update buffer msg state =
                                 else
                                     Position.nextColumn state.cursor
                           }
-                        , Buffer.insert state.cursor string buffer
+                        , Buffer.insert state.cursor string autoclose buffer
                         , Cmd.none
                         )
 

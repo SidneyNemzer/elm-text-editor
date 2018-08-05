@@ -16,6 +16,7 @@ module Buffer
         , lineEnd
         )
 
+import Dict exposing (Dict)
 import List.Extra
 import String.Extra
 import Maybe.Extra
@@ -56,10 +57,42 @@ indexFromPosition buffer position =
             |> Maybe.map (\line -> line + position.column + 1)
 
 
-insert : Position -> String -> Buffer -> Buffer
-insert position string (Buffer buffer) =
+{-| Insert a string into the buffer. The Dict is a map of characters to
+autoclose.
+-}
+insert : Position -> String -> Dict String String -> Buffer -> Buffer
+insert position string autoclose (Buffer buffer) =
     indexFromPosition buffer position
-        |> Maybe.map (\index -> String.Extra.insertAt string index buffer)
+        |> Maybe.map
+            (\index ->
+                case Dict.get string autoclose of
+                    Just closing ->
+                        let
+                            previousChar =
+                                stringCharAt (index - 1) buffer
+
+                            currentChar =
+                                stringCharAt index buffer
+
+                            nearWordChar =
+                                Maybe.map isWordChar previousChar
+                                    |> Maybe.Extra.orElseLazy
+                                        (\() ->
+                                            Maybe.map isWordChar currentChar
+                                        )
+                                    |> Maybe.withDefault False
+                        in
+                            if not nearWordChar then
+                                String.Extra.insertAt
+                                    (string ++ closing)
+                                    index
+                                    buffer
+                            else
+                                String.Extra.insertAt string index buffer
+
+                    Nothing ->
+                        String.Extra.insertAt string index buffer
+            )
         |> Maybe.withDefault buffer
         |> Buffer
 
