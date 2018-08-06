@@ -1,7 +1,7 @@
 module Editor.Update exposing (Msg(..), update)
 
 import Dict exposing (Dict)
-import Array exposing (Array)
+import Array.Hamt as Array exposing (Array)
 import Position exposing (Position)
 import Editor.Model exposing (InternalState)
 import Buffer exposing (Buffer)

@@ -3,7 +3,7 @@ module Util.Array exposing (last)
 {-| Basically Array.Extra but for stuff that isn't included in Array.Extra
 -}
 
-import Array exposing (Array)
+import Array.Hamt as Array exposing (Array)
 
 
 last : Array a -> Maybe ( a, Int )
