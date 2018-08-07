@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
-import Html exposing (div, textarea, text)
+import Html exposing (div, textarea, text, details, summary)
 import Html.Events as Event exposing (onInput)
 import Editor
 import Editor.Styles
@@ -96,11 +96,15 @@ view model =
         , model.editor
             |> Editor.view model.content
             |> Html.map EditorMsg
-        , div [] [ text <| toString model.editor ]
-        , case model.lastKeyPress of
-            Just key ->
-                div [] [ text <| "Last key press: " ++ key ]
+        , details []
+            [ summary []
+                [ text "Debug" ]
+            , div [] [ text <| toString model.editor ]
+            , case model.lastKeyPress of
+                Just key ->
+                    div [] [ text <| "Last key press: " ++ key ]
 
-            Nothing ->
-                text ""
+                Nothing ->
+                    text ""
+            ]
         ]
