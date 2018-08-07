@@ -31,10 +31,11 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    { content = Buffer.init """123456
-789012
-345678
-901234"""
+    { content = Buffer.init """listMapAt : (a -> a) -> Int -> List a -> List a
+listMapAt fn index list =
+  List.Extra.getAt index list
+    |> Maybe.map (\\a -> List.Extra.setAt index (fn a) list)
+    |> Maybe.withDefault list"""
     , editor = Editor.init
     , lastKeyPress = Nothing
     }
