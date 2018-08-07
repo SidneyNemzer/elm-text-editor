@@ -35,11 +35,9 @@ The buffer implementation has helper functions for manipulating its content, lik
 
 This project is missing many of the features of Ace and CodeMirror, but Ace and CodeMirror have had quite a head start about 7 years.
 
-### Shortcuts
-
-The keyboard shortcuts are mostly based on [Atom][]'s shortcuts (because that's the editor I use day to day, so I know the shortcuts pretty well).
-
 ## Previous work and Inspiration
+
+The editor behavior and keyboard shortcuts are based on [Atom][] (because that's the editor I'm most familiar with).
 
 [Ace][] and [CodeMirror][] are text editors designed to work in a web browser. They're both written in JavaScript, so integration with Elm is pretty meh.
 
