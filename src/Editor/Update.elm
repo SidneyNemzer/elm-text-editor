@@ -280,7 +280,7 @@ update buffer msg state =
                                                 , column = 0
                                                 }
                                             else
-                                                start
+                                                Position.nextColumn start
                                         , selection = Nothing
                                       }
                                     , Buffer.replace start end string buffer
