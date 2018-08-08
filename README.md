@@ -2,6 +2,8 @@
 
 A flexible text editor written in Elm
 
+[Check out the demo](https://sidneynemzer.github.io/elm-text-editor/)
+
 > Note:
 > * This project is not published yet on package.elm-lang.org
 > * I would not consider this project ready for use in production, since it's missing major features like undo history, scrolling, and line wrap
