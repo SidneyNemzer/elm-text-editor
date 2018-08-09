@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Set the directory to the demo root
+cd "$(dirname "$0")/../"
+
+# Compile Elm
+elm-make ./Main.elm --output=./Demo.js

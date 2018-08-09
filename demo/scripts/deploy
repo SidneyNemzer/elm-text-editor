@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Exit if there's an error in one of the following commands
+set -e
+
+# Set the directory to the demo root
+cd "$(dirname "$0")/../"
+
+# Switch to the pages branch
+git checkout gh-pages
+
+# Get static files from master
+git checkout master ./index.html
+
+# Copy static files to repo root
+cp ./index.html ../index.html
+cp ./Demo.js ../Demo.js
+
+# Commit static files
+git add ../index.html
+git add ../Demo.js
+git commit -m "Deploy"
+
+# Remove static files
+rm ../index.html
+rm ../Demo.js
+
+# Switch back to the previous branch
+git checkout -
+
+echo "Run git push to finish deploying"
