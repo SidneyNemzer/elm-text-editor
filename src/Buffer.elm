@@ -131,6 +131,10 @@ removeBefore position (Buffer buffer) =
         |> Buffer
 
 
+
+-- EXTRACTING CONTENT FROM BUFFERS
+
+
 lines : Buffer -> List String
 lines (Buffer content) =
     String.split "\n" content
@@ -139,6 +143,10 @@ lines (Buffer content) =
 toString : Buffer -> String
 toString (Buffer buffer) =
     buffer
+
+
+
+-- INDENTING
 
 
 {-| Indent the given line from the given column. Returns the modified buffer and
@@ -203,6 +211,10 @@ deindentFrom { line, column } (Buffer buffer) =
                     )
             )
         |> Maybe.withDefault ( Buffer buffer, column )
+
+
+
+-- GROUPING
 
 
 isWhitespace : Char -> Bool
