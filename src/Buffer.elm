@@ -124,7 +124,7 @@ removeBefore position (Buffer buffer) =
     indexFromPosition buffer position
         |> Maybe.map
             (\index ->
-                String.slice 0 (index - 1) buffer
+                String.slice 0 (max 0 (index - 1)) buffer
                     ++ String.dropLeft index buffer
             )
         |> Maybe.withDefault buffer
