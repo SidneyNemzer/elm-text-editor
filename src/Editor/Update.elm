@@ -246,58 +246,72 @@ update buffer msg state =
                 )
 
             Insert string ->
-                case state.selection of
-                    Just selection ->
+                case ( state.selection, Dict.get string autoclose ) of
+                    ( Just selection, Just closing ) ->
+                        let
+                            ( start, end ) =
+                                Position.order selection state.cursor
+
+                            wrapped =
+                                string
+                                    ++ Buffer.between start end buffer
+                                    ++ closing
+                        in
+                            ( { state
+                                | cursor =
+                                    Position.nextColumn state.cursor
+                                , selection =
+                                    Just <|
+                                        if selection.line == start.line then
+                                            Position.nextColumn selection
+                                        else
+                                            selection
+                              }
+                            , Buffer.replace start end wrapped buffer
+                            , Cmd.none
+                            )
+
+                    ( Just selection, Nothing ) ->
                         let
                             ( start, end ) =
                                 Position.order selection state.cursor
                         in
-                            case Dict.get string autoclose of
-                                Just closing ->
-                                    ( { state
-                                        | cursor =
-                                            Position.nextColumn state.cursor
-                                        , selection =
-                                            Just <|
-                                                if selection.line == start.line then
-                                                    Position.nextColumn selection
-                                                else
-                                                    selection
-                                      }
-                                    , Buffer.insert start string Dict.empty buffer
-                                        |> Buffer.insert
-                                            (Position.nextColumn end)
-                                            closing
-                                            Dict.empty
-                                    , Cmd.none
-                                    )
+                            ( { state
+                                | cursor =
+                                    if string == "\n" then
+                                        { line = start.line + 1
+                                        , column = 0
+                                        }
+                                    else
+                                        Position.nextColumn start
+                                , selection = Nothing
+                              }
+                            , Buffer.replace start end string buffer
+                            , Cmd.none
+                            )
 
-                                Nothing ->
-                                    ( { state
-                                        | cursor =
-                                            if string == "\n" then
-                                                { line = start.line + 1
-                                                , column = 0
-                                                }
-                                            else
-                                                Position.nextColumn start
-                                        , selection = Nothing
-                                      }
-                                    , Buffer.replace start end string buffer
-                                    , Cmd.none
-                                    )
+                    ( Nothing, maybeClosing ) ->
+                        let
+                            nearWordChar =
+                                Buffer.nearWordChar state.cursor buffer
 
-                    Nothing ->
-                        ( { state
-                            | cursor =
-                                if string == "\n" then
-                                    { line = state.cursor.line + 1, column = 0 }
+                            insertString =
+                                if not nearWordChar then
+                                    Maybe.map ((++) string) maybeClosing
+                                        |> Maybe.withDefault string
                                 else
-                                    Position.nextColumn state.cursor
-                          }
-                        , Buffer.insert state.cursor string autoclose buffer
-                        , Cmd.none
-                        )
+                                    string
+                        in
+                            ( { state
+                                | cursor =
+                                    if string == "\n" then
+                                        { line = state.cursor.line + 1, column = 0 }
+                                    else
+                                        Position.nextColumn state.cursor
+                              }
+                            , Buffer.insert state.cursor insertString buffer
+                            , Cmd.none
+                            )
 
             RemoveCharAfter ->
                 case state.selection of
