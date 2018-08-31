@@ -748,7 +748,7 @@ update buffer msg state =
                 )
 
 
-{-| Make sure the cursor is at a valid positon in the buffer.
+{-| Make sure the cursor is at a valid position in the buffer.
 
 If the cursor is:
 
