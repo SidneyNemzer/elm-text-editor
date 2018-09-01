@@ -1,6 +1,7 @@
 module Buffer
     exposing
         ( Buffer
+        , Direction(..)
         , init
         , lines
         , insert
@@ -16,12 +17,16 @@ module Buffer
         , groupRange
         , lineEnd
         , nearWordChar
+        , clampPosition
+        , end
         )
 
+import Array.Hamt as Array exposing (Array)
 import List.Extra
 import String.Extra
 import Maybe.Extra
 import Position exposing (Position)
+import Util.Array
 
 
 type Buffer
@@ -454,3 +459,64 @@ groupRange position (Buffer buffer) =
 lineEnd : Int -> Buffer -> Maybe Int
 lineEnd line =
     lines >> List.Extra.getAt line >> Maybe.map String.length
+
+
+{-| Move the position to the closest valid position in the buffer.
+
+If the cursor is:
+
+    - before the first line, move to the first column of the first line
+    - after the last line, move to the last column of the last line
+    - past the last column of the line, either go to the last column of the line
+      or the first column of the next line, depending on the specified direction
+    - before the first column of the line, go to the last column of the previous
+      line.
+
+-}
+clampPosition : Direction -> Buffer -> Position -> Position
+clampPosition direction buffer position =
+    let
+        lines_ =
+            lines buffer |> Array.fromList
+    in
+        if position.line < 0 then
+            Position 0 0
+        else
+            case Array.get position.line lines_ of
+                Just line ->
+                    if position.column > String.length line then
+                        case direction of
+                            Forward ->
+                                Position
+                                    (min
+                                        (Array.length lines_ - 1)
+                                        (position.line + 1)
+                                    )
+                                    0
+
+                            Backward ->
+                                Position position.line (String.length line)
+                    else if position.column < 0 then
+                        Array.get (position.line - 1) lines_
+                            |> Maybe.map
+                                (String.length >> Position (position.line - 1))
+                            |> Maybe.withDefault (Position 0 0)
+                    else
+                        position
+
+                Nothing ->
+                    case Util.Array.last lines_ of
+                        Just ( line, number ) ->
+                            Position number (String.length line)
+
+                        Nothing ->
+                            Position 0 0
+
+
+end : Buffer -> Position
+end buffer =
+    lines buffer
+        |> Array.fromList
+        |> Util.Array.last
+        |> Maybe.map (\( line, index ) -> Position index (String.length line))
+        |> Maybe.withDefault (Position 0 0)
