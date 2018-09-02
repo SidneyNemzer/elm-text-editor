@@ -84,8 +84,7 @@ nearWordChar position (Buffer buffer) =
         |> Maybe.withDefault False
 
 
-{-| Insert a string into the buffer. The Dict is a map of characters to
-autoclose.
+{-| Insert a string into the buffer.
 -}
 insert : Position -> String -> Buffer -> Buffer
 insert position string (Buffer buffer) =
