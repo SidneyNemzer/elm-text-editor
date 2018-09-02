@@ -487,12 +487,10 @@ clampPosition direction buffer position =
                     if position.column > String.length line then
                         case direction of
                             Forward ->
-                                Position
-                                    (min
-                                        (Array.length lines_ - 1)
-                                        (position.line + 1)
-                                    )
-                                    0
+                                if position.line < (Array.length lines_ - 1) then
+                                    Position (position.line + 1) 0
+                                else
+                                    position
 
                             Backward ->
                                 Position position.line (String.length line)
