@@ -254,7 +254,10 @@ update buffer msg state =
                     in
                         ( { state
                             | cursor =
-                                Position.nextColumn state.cursor
+                                if state.cursor.line == start.line then
+                                    Position.nextColumn state.cursor
+                                else
+                                    state.cursor
                             , selection =
                                 Just <|
                                     if selection.line == start.line then
