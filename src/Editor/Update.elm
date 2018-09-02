@@ -641,21 +641,13 @@ update buffer msg state =
         SelectToGroupStart ->
             case state.selection of
                 Just selection ->
-                    let
-                        ( start, end ) =
-                            Position.order selection state.cursor
-                    in
-                        ( { state
-                            | cursor = Buffer.groupStart start buffer
-                            , selection =
-                                if start == end then
-                                    Nothing
-                                else
-                                    Just start
-                          }
-                        , buffer
-                        , Cmd.none
-                        )
+                    ( { state
+                        | cursor = Buffer.groupStart state.cursor buffer
+                        , selection = state.selection
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
                 Nothing ->
                     let
@@ -677,21 +669,13 @@ update buffer msg state =
         SelectToGroupEnd ->
             case state.selection of
                 Just selection ->
-                    let
-                        ( start, end ) =
-                            Position.order selection state.cursor
-                    in
-                        ( { state
-                            | cursor = Buffer.groupEnd end buffer
-                            , selection =
-                                if start == end then
-                                    Nothing
-                                else
-                                    Just end
-                          }
-                        , buffer
-                        , Cmd.none
-                        )
+                    ( { state
+                        | cursor = Buffer.groupEnd state.cursor buffer
+                        , selection = state.selection
+                      }
+                    , buffer
+                    , Cmd.none
+                    )
 
                 Nothing ->
                     let
