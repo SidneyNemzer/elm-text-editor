@@ -484,12 +484,12 @@ update buffer msg state =
                 ( { state
                     | cursor = cursor
                     , selection =
-                        if
-                            (state.selection == Just cursor)
-                                || (state.cursor == cursor)
-                        then
+                        if state.selection == Just cursor then
                             Nothing
-                        else if state.selection == Nothing then
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
                             Just state.cursor
                         else
                             state.selection
@@ -507,12 +507,12 @@ update buffer msg state =
                 ( { state
                     | cursor = cursor
                     , selection =
-                        if
-                            (state.selection == Just cursor)
-                                || (state.cursor == cursor)
-                        then
+                        if state.selection == Just cursor then
                             Nothing
-                        else if state.selection == Nothing then
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
                             Just state.cursor
                         else
                             state.selection
@@ -530,12 +530,12 @@ update buffer msg state =
                 ( { state
                     | cursor = cursor
                     , selection =
-                        if
-                            (state.selection == Just cursor)
-                                || (state.cursor == cursor)
-                        then
+                        if state.selection == Just cursor then
                             Nothing
-                        else if state.selection == Nothing then
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
                             Just state.cursor
                         else
                             state.selection
@@ -553,12 +553,12 @@ update buffer msg state =
                 ( { state
                     | cursor = cursor
                     , selection =
-                        if
-                            (state.selection == Just cursor)
-                                || (state.cursor == cursor)
-                        then
+                        if state.selection == Just cursor then
                             Nothing
-                        else if state.selection == Nothing then
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
                             Just state.cursor
                         else
                             state.selection
@@ -602,76 +602,63 @@ update buffer msg state =
                 ( { state
                     | cursor = cursor
                     , selection =
-                        state.selection
-                            |> Maybe.withDefault state.cursor
-                            |> Just
-                            |> Maybe.andThen
-                                (\selection ->
-                                    if selection == cursor then
-                                        Nothing
-                                    else
-                                        Just selection
-                                )
+                        if state.selection == Just cursor then
+                            Nothing
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
+                            Just state.cursor
+                        else
+                            state.selection
                   }
                 , buffer
                 , Cmd.none
                 )
 
         SelectToGroupStart ->
-            case state.selection of
-                Just selection ->
-                    ( { state
-                        | cursor = Buffer.groupStart state.cursor buffer
-                        , selection = state.selection
-                      }
-                    , buffer
-                    , Cmd.none
-                    )
-
-                Nothing ->
-                    let
-                        cursor =
-                            Buffer.groupStart state.cursor buffer
-                    in
-                        ( { state
-                            | cursor = cursor
-                            , selection =
-                                if state.cursor == cursor then
-                                    Nothing
-                                else
-                                    Just state.cursor
-                          }
-                        , buffer
-                        , Cmd.none
-                        )
+            let
+                cursor =
+                    Buffer.groupStart state.cursor buffer
+            in
+                ( { state
+                    | cursor = cursor
+                    , selection =
+                        if state.selection == Just cursor then
+                            Nothing
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
+                            Just state.cursor
+                        else
+                            state.selection
+                  }
+                , buffer
+                , Cmd.none
+                )
 
         SelectToGroupEnd ->
-            case state.selection of
-                Just selection ->
-                    ( { state
-                        | cursor = Buffer.groupEnd state.cursor buffer
-                        , selection = state.selection
-                      }
-                    , buffer
-                    , Cmd.none
-                    )
-
-                Nothing ->
-                    let
-                        cursor =
-                            Buffer.groupEnd state.cursor buffer
-                    in
-                        ( { state
-                            | cursor = cursor
-                            , selection =
-                                if state.cursor == cursor then
-                                    Nothing
-                                else
-                                    Just state.cursor
-                          }
-                        , buffer
-                        , Cmd.none
-                        )
+            let
+                cursor =
+                    Buffer.groupEnd state.cursor buffer
+            in
+                ( { state
+                    | cursor = cursor
+                    , selection =
+                        if state.selection == Just cursor then
+                            Nothing
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
+                            Just state.cursor
+                        else
+                            state.selection
+                  }
+                , buffer
+                , Cmd.none
+                )
 
         SelectAll ->
             ( { state
