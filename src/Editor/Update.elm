@@ -575,16 +575,15 @@ update buffer msg state =
                 ( { state
                     | cursor = cursor
                     , selection =
-                        state.selection
-                            |> Maybe.withDefault state.cursor
-                            |> Just
-                            |> Maybe.andThen
-                                (\selection ->
-                                    if selection == cursor then
-                                        Nothing
-                                    else
-                                        Just selection
-                                )
+                        if state.selection == Just cursor then
+                            Nothing
+                        else if
+                            (state.selection == Nothing)
+                                && (state.cursor /= cursor)
+                        then
+                            Just state.cursor
+                        else
+                            state.selection
                   }
                 , buffer
                 , Cmd.none
