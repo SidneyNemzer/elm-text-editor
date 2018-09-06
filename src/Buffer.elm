@@ -10,8 +10,10 @@ module Buffer
         , toString
         , between
         , indentFrom
+        , indentBetween
         , indentSize
         , deindentFrom
+        , deindentBetween
         , groupEnd
         , groupStart
         , groupRange
@@ -187,6 +189,23 @@ indentFrom { line, column } (Buffer buffer) =
         |> Maybe.withDefault ( Buffer buffer, column )
 
 
+{-| Indent each line between the given positions (inclusive). All lines will
+be indented the full indent size.
+-}
+indentBetween : Position -> Position -> Buffer -> Buffer
+indentBetween pos1 pos2 buffer =
+    let
+        ( start, end ) =
+            Position.order pos1 pos2
+    in
+        List.range start.line end.line
+            |> List.foldl
+                (\line ->
+                    indentFrom { line = line, column = 0 } >> Tuple.first
+                )
+                buffer
+
+
 {-| Deindent the given line. Returns the modified buffer and the column
 `minus - deindentedSize`. Unlike `indent`, `deindent` will deindent all the
 content in the line, regardless of `position.column`. *Why not just accept a
@@ -221,6 +240,34 @@ deindentFrom { line, column } (Buffer buffer) =
                     )
             )
         |> Maybe.withDefault ( Buffer buffer, column )
+
+
+deindentBetween : Position -> Position -> Buffer -> ( Buffer, Int, Int )
+deindentBetween pos1 pos2 buffer =
+    let
+        ( pos1Buffer, pos1Column ) =
+            deindentFrom pos1 buffer
+
+        ( pos2Buffer, pos2Column ) =
+            deindentFrom pos2 pos1Buffer
+    in
+        if abs (pos1.line - pos2.line) > 1 then
+            let
+                ( start, end ) =
+                    Position.order pos1 pos2
+            in
+                ( List.range (start.line + 1) (end.line - 1)
+                    |> List.foldl
+                        (\line ->
+                            deindentFrom { line = line, column = 0 }
+                                >> Tuple.first
+                        )
+                        pos2Buffer
+                , pos1Column
+                , pos2Column
+                )
+        else
+            ( pos2Buffer, pos1Column, pos2Column )
 
 
 

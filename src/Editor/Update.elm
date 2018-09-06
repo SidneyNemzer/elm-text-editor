@@ -416,32 +416,20 @@ update buffer msg state =
         Indent ->
             case state.selection of
                 Just selection ->
-                    let
-                        ( start, end ) =
-                            Position.order selection state.cursor
-                    in
-                        ( { state
-                            | cursor =
+                    ( { state
+                        | cursor =
+                            Position.addColumn
+                                Buffer.indentSize
+                                state.cursor
+                        , selection =
+                            Just <|
                                 Position.addColumn
                                     Buffer.indentSize
-                                    state.cursor
-                            , selection =
-                                Just <|
-                                    Position.addColumn
-                                        Buffer.indentSize
-                                        selection
-                          }
-                        , List.range start.line end.line
-                            |> List.foldl
-                                (\line buffer ->
-                                    Buffer.indentFrom
-                                        (Position line 0)
-                                        buffer
-                                        |> Tuple.first
-                                )
-                                buffer
-                        , Cmd.none
-                        )
+                                    selection
+                      }
+                    , Buffer.indentBetween state.cursor selection buffer
+                    , Cmd.none
+                    )
 
                 Nothing ->
                     let
@@ -460,29 +448,17 @@ update buffer msg state =
             case state.selection of
                 Just selection ->
                     let
-                        ( start, end ) =
-                            Position.order selection state.cursor
+                        ( deindentedBuffer, cursorColumn, selectionColumn ) =
+                            Buffer.deindentBetween state.cursor selection buffer
                     in
                         ( { state
                             | cursor =
-                                Position.addColumn
-                                    -Buffer.indentSize
-                                    state.cursor
+                                Position.setColumn cursorColumn state.cursor
                             , selection =
                                 Just <|
-                                    Position.addColumn
-                                        -Buffer.indentSize
-                                        selection
+                                    Position.setColumn selectionColumn selection
                           }
-                        , List.range (start.line + 1) (end.line - 1)
-                            |> List.foldl
-                                (\line buffer ->
-                                    Buffer.deindentFrom
-                                        (Position line 0)
-                                        buffer
-                                        |> Tuple.first
-                                )
-                                buffer
+                        , deindentedBuffer
                         , Cmd.none
                         )
 
