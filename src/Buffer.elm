@@ -21,6 +21,7 @@ module Buffer
         , nearWordChar
         , clampPosition
         , end
+        , undo
         )
 
 import Array.Hamt as Array exposing (Array)
@@ -29,6 +30,7 @@ import String.Extra
 import Maybe.Extra
 import Position exposing (Position)
 import Util.Array
+import Editor.History exposing (History, Event(..))
 
 
 type Buffer
@@ -65,6 +67,80 @@ indexFromPosition buffer position =
             |> Maybe.map (\line -> line + position.column + 1)
 
 
+undo : Event -> Buffer -> Buffer
+undo event (Buffer buffer) =
+    case event of
+        Insert { cursor, string } ->
+            indexFromPosition buffer cursor
+                |> Maybe.map
+                    (\index ->
+                        String.slice 0 index buffer
+                            ++ String.dropLeft (index + (String.length string)) buffer
+                    )
+                |> Maybe.withDefault buffer
+                |> Buffer
+
+        Replace { start, removed, inserted } ->
+            indexFromPosition buffer start
+                |> Maybe.map
+                    (\startIndex ->
+                        let
+                            endIndex =
+                                startIndex + String.length inserted
+                        in
+                            String.slice 0 startIndex buffer
+                                ++ removed
+                                ++ String.dropLeft endIndex buffer
+                    )
+                |> Maybe.withDefault buffer
+                |> Buffer
+
+        RemoveBefore { cursor, removed } ->
+            indexFromPosition buffer cursor
+                |> Maybe.map
+                    (\index ->
+                        String.slice 0 (index - 1) buffer
+                            ++ removed
+                            ++ String.dropLeft (index - 1) buffer
+                    )
+                |> Maybe.withDefault buffer
+                |> Buffer
+
+        Indent { cursor, moved } ->
+            indexFromPosition buffer cursor
+                |> Maybe.map
+                    (\index ->
+                        String.Extra.replaceSlice
+                            ""
+                            index
+                            (index + moved)
+                            buffer
+                    )
+                |> Maybe.withDefault buffer
+                |> Buffer
+
+        IndentLines { cursor, selection } ->
+            let
+                ( updatedBuffer, _, _ ) =
+                    deindentBetween cursor selection (Buffer buffer)
+            in
+                updatedBuffer
+
+
+
+-- Deindent { cursor  } ->
+--
+-- IndentLines { cursor , selection : Position } ->
+--
+-- DeindentLines { cursor , selection : Position } ->
+--
+--
+-- Indent position _ ->
+--
+--
+-- Deindent position _ ->
+
+
 nearWordChar : Position -> Buffer -> Bool
 nearWordChar position (Buffer buffer) =
     indexFromPosition buffer position
@@ -88,46 +164,84 @@ nearWordChar position (Buffer buffer) =
 
 {-| Insert a string into the buffer.
 -}
-insert : Position -> String -> Buffer -> Buffer
-insert position string (Buffer buffer) =
+insert : Position -> String -> ( Buffer, History ) -> ( Buffer, History )
+insert position string ( Buffer buffer, history ) =
     indexFromPosition buffer position
-        |> Maybe.map (\index -> String.Extra.insertAt string index buffer)
-        |> Maybe.withDefault buffer
-        |> Buffer
+        |> Maybe.map
+            (\index ->
+                ( String.Extra.insertAt string index buffer
+                , Editor.History.push
+                    (Insert
+                        { cursor = position, string = string }
+                    )
+                    history
+                )
+            )
+        |> Maybe.withDefault ( buffer, history )
+        |> Tuple.mapFirst Buffer
 
 
-replace : Position -> Position -> String -> Buffer -> Buffer
-replace pos1 pos2 string (Buffer buffer) =
+replace :
+    { cursor : Position, selection : Maybe Position }
+    -> Position
+    -> Position
+    -> String
+    -> ( Buffer, History )
+    -> ( Buffer, History )
+replace { cursor, selection } pos1 pos2 string ( Buffer buffer, history ) =
     let
         ( start, end ) =
             Position.order pos1 pos2
     in
         Maybe.map2
             (\startIndex endIndex ->
-                String.slice 0 startIndex buffer
+                ( String.slice 0 startIndex buffer
                     ++ string
                     ++ String.dropLeft endIndex buffer
+                , Editor.History.push
+                    (Replace
+                        { start = start
+                        , end = end
+                        , cursor = cursor
+                        , selection = selection
+                        , removed = String.slice startIndex endIndex buffer
+                        , inserted = string
+                        }
+                    )
+                    history
+                )
             )
             (indexFromPosition buffer start)
             (indexFromPosition buffer end)
-            |> Maybe.withDefault buffer
-            |> Buffer
+            |> Maybe.withDefault ( buffer, history )
+            |> Tuple.mapFirst Buffer
 
 
 {-| Remove the character before the given position. This is useful because
 determining the *previous* valid position is relativly expensive, but it's easy
 for the buffer to just use the previous index.
 -}
-removeBefore : Position -> Buffer -> Buffer
-removeBefore position (Buffer buffer) =
-    indexFromPosition buffer position
+removeBefore : Position -> ( Buffer, History ) -> ( Buffer, History )
+removeBefore cursor ( Buffer buffer, history ) =
+    indexFromPosition buffer cursor
         |> Maybe.map
             (\index ->
-                String.slice 0 (max 0 (index - 1)) buffer
-                    ++ String.dropLeft index buffer
+                if index > 0 then
+                    ( String.slice 0 (index - 1) buffer
+                        ++ String.dropLeft index buffer
+                    , Editor.History.push
+                        (RemoveBefore
+                            { cursor = cursor
+                            , removed = String.slice (index - 1) index buffer
+                            }
+                        )
+                        history
+                    )
+                else
+                    ( buffer, history )
             )
-        |> Maybe.withDefault buffer
-        |> Buffer
+        |> Maybe.withDefault ( buffer, history )
+        |> Tuple.mapFirst Buffer
 
 
 
@@ -166,8 +280,8 @@ the `column + indentedSize`. It accepts a position rather than a line because th
 behavior depends on the column. It moves everything after the column to be
 aligned with the indent size, content before the column is not moved.
 -}
-indentFrom : Position -> Buffer -> ( Buffer, Int )
-indentFrom { line, column } (Buffer buffer) =
+indentFrom : Position -> ( Buffer, History ) -> ( Buffer, Int, History )
+indentFrom ({ line, column } as cursor) ( Buffer buffer, history ) =
     indexFromPosition buffer (Position line 0)
         |> Maybe.map
             (\lineStart ->
@@ -184,9 +298,12 @@ indentFrom { line, column } (Buffer buffer) =
                             ++ String.repeat addIndentSize " "
                             ++ String.dropLeft (lineStart + column) buffer
                     , column + addIndentSize
+                    , Editor.History.push
+                        (Indent { cursor = cursor, moved = column + addIndentSize })
+                        history
                     )
             )
-        |> Maybe.withDefault ( Buffer buffer, column )
+        |> Maybe.withDefault ( Buffer buffer, column, history )
 
 
 {-| Indent each line between the given positions (inclusive). All lines will

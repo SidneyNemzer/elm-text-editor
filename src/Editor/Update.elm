@@ -3,6 +3,7 @@ module Editor.Update exposing (Msg(..), update)
 import Dict exposing (Dict)
 import Position exposing (Position)
 import Editor.Model exposing (InternalState)
+import Editor.History
 import Buffer exposing (Buffer)
 
 
@@ -36,6 +37,7 @@ type Msg
     | SelectAll
     | SelectGroup
     | SelectLine
+    | Undo
 
 
 autoclose : Dict String String
@@ -251,6 +253,16 @@ update buffer msg state =
                             string
                                 ++ Buffer.between start end buffer
                                 ++ closing
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                start
+                                end
+                                wrapped
+                                ( buffer, state.history )
                     in
                         ( { state
                             | cursor =
@@ -264,8 +276,9 @@ update buffer msg state =
                                         Position.nextColumn selection
                                     else
                                         selection
+                            , history = newHistory
                           }
-                        , Buffer.replace start end wrapped buffer
+                        , newBuffer
                         , Cmd.none
                         )
 
@@ -273,6 +286,16 @@ update buffer msg state =
                     let
                         ( start, end ) =
                             Position.order selection state.cursor
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                start
+                                end
+                                string
+                                ( buffer, state.history )
                     in
                         ( { state
                             | cursor =
@@ -283,8 +306,9 @@ update buffer msg state =
                                 else
                                     Position.nextColumn start
                             , selection = Nothing
+                            , history = newHistory
                           }
-                        , Buffer.replace start end string buffer
+                        , newBuffer
                         , Cmd.none
                         )
 
@@ -299,6 +323,12 @@ update buffer msg state =
                                     |> Maybe.withDefault string
                             else
                                 string
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.insert
+                                state.cursor
+                                insertString
+                                ( buffer, state.history )
                     in
                         ( { state
                             | cursor =
@@ -306,8 +336,9 @@ update buffer msg state =
                                     { line = state.cursor.line + 1, column = 0 }
                                 else
                                     Position.nextColumn state.cursor
+                            , history = newHistory
                           }
-                        , Buffer.insert state.cursor insertString buffer
+                        , newBuffer
                         , Cmd.none
                         )
 
@@ -317,24 +348,42 @@ update buffer msg state =
                     let
                         ( start, end ) =
                             Position.order selection state.cursor
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                start
+                                end
+                                ""
+                                ( buffer, state.history )
                     in
                         ( { state
                             | cursor = start
                             , selection = Nothing
+                            , history = newHistory
                           }
-                        , Buffer.replace start end "" buffer
+                        , newBuffer
                         , Cmd.none
                         )
 
                 Nothing ->
-                    ( state
-                    , Buffer.replace
-                        state.cursor
-                        (Position.nextColumn state.cursor)
-                        ""
-                        buffer
-                    , Cmd.none
-                    )
+                    let
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                state.cursor
+                                (Position.nextColumn state.cursor)
+                                ""
+                                ( buffer, state.history )
+                    in
+                        ( { state | history = newHistory }
+                        , newBuffer
+                        , Cmd.none
+                        )
 
         RemoveCharBefore ->
             case state.selection of
@@ -342,26 +391,44 @@ update buffer msg state =
                     let
                         ( start, end ) =
                             Position.order selection state.cursor
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                start
+                                end
+                                ""
+                                ( buffer, state.history )
                     in
                         ( { state
                             | cursor = start
                             , selection = Nothing
+                            , history = newHistory
                           }
-                        , Buffer.replace start end "" buffer
+                        , newBuffer
                         , Cmd.none
                         )
 
                 Nothing ->
-                    ( { state
-                        | cursor =
-                            Position.previousColumn state.cursor
-                                -- use old buffer to place cursor at the
-                                -- end of the old line
-                                |> Buffer.clampPosition Buffer.Backward buffer
-                      }
-                    , Buffer.removeBefore state.cursor buffer
-                    , Cmd.none
-                    )
+                    let
+                        ( newBuffer, newHistory ) =
+                            Buffer.removeBefore
+                                state.cursor
+                                ( buffer, state.history )
+                    in
+                        ( { state
+                            | cursor =
+                                Position.previousColumn state.cursor
+                                    -- use old buffer to place cursor at the
+                                    -- end of the old line
+                                    |> Buffer.clampPosition Buffer.Backward buffer
+                            , history = newHistory
+                          }
+                        , newBuffer
+                        , Cmd.none
+                        )
 
         RemoveGroupAfter ->
             case state.selection of
@@ -369,12 +436,23 @@ update buffer msg state =
                     let
                         ( start, end ) =
                             Position.order selection state.cursor
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                start
+                                end
+                                ""
+                                ( buffer, state.history )
                     in
                         ( { state
                             | cursor = start
                             , selection = Nothing
+                            , history = newHistory
                           }
-                        , Buffer.replace start end "" buffer
+                        , newBuffer
                         , Cmd.none
                         )
 
@@ -382,9 +460,19 @@ update buffer msg state =
                     let
                         end =
                             Buffer.groupEnd state.cursor buffer
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                state.cursor
+                                end
+                                ""
+                                ( buffer, state.history )
                     in
-                        ( state
-                        , Buffer.replace state.cursor end "" buffer
+                        ( { state | history = newHistory }
+                        , newBuffer
                         , Cmd.none
                         )
 
@@ -394,12 +482,23 @@ update buffer msg state =
                     let
                         ( start, end ) =
                             Position.order selection state.cursor
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                start
+                                end
+                                ""
+                                ( buffer, state.history )
                     in
                         ( { state
                             | cursor = start
                             , selection = Nothing
+                            , history = newHistory
                           }
-                        , Buffer.replace start end "" buffer
+                        , newBuffer
                         , Cmd.none
                         )
 
@@ -407,9 +506,19 @@ update buffer msg state =
                     let
                         start =
                             Buffer.groupStart state.cursor buffer
+
+                        ( newBuffer, newHistory ) =
+                            Buffer.replace
+                                { cursor = state.cursor
+                                , selection = state.selection
+                                }
+                                start
+                                state.cursor
+                                ""
+                                ( buffer, state.history )
                     in
-                        ( { state | cursor = start }
-                        , Buffer.replace start state.cursor "" buffer
+                        ( { state | cursor = start, history = newHistory }
+                        , newBuffer
                         , Cmd.none
                         )
 
@@ -697,3 +806,40 @@ update buffer msg state =
             , buffer
             , Cmd.none
             )
+
+        Undo ->
+            case Editor.History.undo state.history of
+                ( history, Just event ) ->
+                    case event of
+                        Editor.History.Insert { cursor } ->
+                            ( { state
+                                | history = history
+                                , cursor = cursor
+                                , selection = Nothing
+                              }
+                            , Buffer.undo event buffer
+                            , Cmd.none
+                            )
+
+                        Editor.History.Replace { cursor, selection } ->
+                            ( { state
+                                | cursor = cursor
+                                , selection = selection
+                                , history = history
+                              }
+                            , Buffer.undo event buffer
+                            , Cmd.none
+                            )
+
+                        Editor.History.RemoveBefore { cursor } ->
+                            ( { state
+                                | cursor = cursor
+                                , selection = Nothing
+                                , history = history
+                              }
+                            , Buffer.undo event buffer
+                            , Cmd.none
+                            )
+
+                ( _, Nothing ) ->
+                    ( state, buffer, Cmd.none )

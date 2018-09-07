@@ -1,6 +1,7 @@
 module Editor.Model exposing (InternalState)
 
 import Position exposing (Position)
+import Editor.History exposing (History)
 
 
 type alias InternalState =
@@ -8,4 +9,5 @@ type alias InternalState =
     , cursor : Position
     , selection : Maybe Position
     , dragging : Bool
+    , history : History
     }
