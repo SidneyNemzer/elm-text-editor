@@ -5,6 +5,7 @@ import Position exposing (Position)
 import Editor.Model exposing (InternalState)
 import Editor.Update
 import Editor.View
+import Editor.History
 import Buffer exposing (Buffer)
 
 
@@ -23,6 +24,7 @@ init =
         , cursor = Position 0 0
         , selection = Nothing
         , dragging = False
+        , history = Editor.History.empty
         }
 
 

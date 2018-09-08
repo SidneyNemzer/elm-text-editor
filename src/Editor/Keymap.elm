@@ -104,6 +104,8 @@ keymaps =
             , ( "Delete", RemoveGroupAfter )
             , ( "a", SelectAll )
             , ( "d", SelectGroup )
+            , ( "z", Undo )
+            , ( "y", Redo )
             ]
     , controlAndShift =
         Dict.fromList
