@@ -6,7 +6,7 @@ A flexible text editor written in Elm
 
 > Note:
 > * This project is not published yet on package.elm-lang.org
-> * I would not consider this project ready for use in production, since it's missing major features like undo history, scrolling, and line wrap
+> * I would not consider this project ready for use in production, since it's missing major features like scrolling and line wrap
 
 ## Features / Architecture
 
@@ -17,7 +17,6 @@ This library implements an editor (duh) and a buffer. The buffer is separate fro
 ### Buffer
 
 - [x] file content
-- [ ] undo history
 - [ ] save status
 - [ ] syntax highlighting (cached)
 - [ ] decorations (eg underlines, tooltips, gutter icons)
@@ -30,12 +29,13 @@ The buffer implementation has helper functions for manipulating its content, lik
 - [x] selection
 - [x] rendering to the DOM
 - [x] UI interaction (mouse and keyboard)
+- [x] undo history
 - [ ] scroll position
 - [ ] auto-complete dialog
 - [ ] open decorations (in other words, decorations exist in the buffer but each editor tracks open decorations)
 - [ ] line wrap
 
-This project is missing many of the features of Ace and CodeMirror, but Ace and CodeMirror have had quite a head start about 7 years.
+I hope that one day this project will be comparable to Ace and CodeMirror, but Ace and CodeMirror have had quite a head start (about 7 years!).
 
 ## Previous work and Inspiration
 
@@ -45,7 +45,7 @@ The editor behavior and keyboard shortcuts are based on [Atom][] (because that's
 
 [Janiczek][] recently demonstrated [a text editor in pure elm][Janiczek-editor-discourse], which implements work-arounds for several issues I had faced in the past when creating a pure elm editor.
 
-> I hope this inspires somebody to try do some stuff in Elm they’ve been needing but seemed too big / hard for them! You might, like me with this project, find out it’s in your reach - no doubt thanks to Elm  
+> I hope this inspires somebody to try some stuff in Elm they’ve been needing but seemed too big / hard for them! You might, like me with this project, find out it’s in your reach - no doubt thanks to Elm  
 > *- Janiczek*
 
 [Atom]: https://atom.io
