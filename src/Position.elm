@@ -1,16 +1,15 @@
-module Position
-    exposing
-        ( Position
-        , order
-        , between
-        , addColumn
-        , nextColumn
-        , previousColumn
-        , setColumn
-        , addLine
-        , nextLine
-        , previousLine
-        )
+module Position exposing
+    ( Position
+    , addColumn
+    , addLine
+    , between
+    , nextColumn
+    , nextLine
+    , order
+    , previousColumn
+    , previousLine
+    , setColumn
+    )
 
 
 type alias Position =
@@ -21,8 +20,10 @@ order : Position -> Position -> ( Position, Position )
 order pos1 pos2 =
     if pos2.line > pos1.line then
         ( pos1, pos2 )
+
     else if pos2.line == pos1.line && pos2.column > pos1.column then
         ( pos1, pos2 )
+
     else
         ( pos2, pos1 )
 
@@ -31,6 +32,7 @@ betweenHelp : Int -> Int -> Int -> Bool
 betweenHelp start end point =
     if start > end then
         betweenHelp end start point
+
     else
         start /= end && point >= start && point < end
 
@@ -41,14 +43,17 @@ between pos1 pos2 { line, column } =
         ( start, end ) =
             order pos1 pos2
     in
-        if start.line == end.line then
-            line == start.line && betweenHelp start.column end.column column
-        else if start.line == line then
-            column >= start.column
-        else if end.line == line then
-            column < end.column
-        else
-            betweenHelp start.line end.line line
+    if start.line == end.line then
+        line == start.line && betweenHelp start.column end.column column
+
+    else if start.line == line then
+        column >= start.column
+
+    else if end.line == line then
+        column < end.column
+
+    else
+        betweenHelp start.line end.line line
 
 
 addColumn : Int -> Position -> Position

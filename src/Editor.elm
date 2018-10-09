@@ -1,12 +1,12 @@
-module Editor exposing (State, Msg, init, update, view)
+module Editor exposing (Msg, State, init, update, view)
 
-import Html exposing (Html)
-import Position exposing (Position)
+import Buffer exposing (Buffer)
+import Editor.History
 import Editor.Model exposing (InternalState)
 import Editor.Update
 import Editor.View
-import Editor.History
-import Buffer exposing (Buffer)
+import Html exposing (Html)
+import Position exposing (Position)
 
 
 type alias Msg =
@@ -31,7 +31,7 @@ init =
 update : Buffer -> Msg -> State -> ( State, Buffer, Cmd Msg )
 update buffer msg (State state) =
     Editor.Update.update buffer msg state
-        |> (\( state, buffer, cmd ) -> ( State state, buffer, cmd ))
+        |> (\( newState, newBuffer, cmd ) -> ( State newState, newBuffer, cmd ))
 
 
 view : Buffer -> State -> Html Msg

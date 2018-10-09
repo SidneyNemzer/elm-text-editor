@@ -1,10 +1,10 @@
 module Editor.Update exposing (Msg(..), update)
 
-import Dict exposing (Dict)
-import Position exposing (Position)
-import Editor.Model exposing (InternalState)
-import Editor.History
 import Buffer exposing (Buffer)
+import Dict exposing (Dict)
+import Editor.History
+import Editor.Model exposing (InternalState)
+import Position exposing (Position)
 
 
 type Msg
@@ -70,6 +70,7 @@ pushHistory oldState oldBuffer ( state, buffer, cmd ) =
                 Editor.History.push
                     (historyState oldState oldBuffer)
                     state.history
+
             else
                 state.history
       }
@@ -99,12 +100,14 @@ update buffer msg state =
                             Just selection ->
                                 if selection == position then
                                     Nothing
+
                                 else
                                     Just selection
 
                             Nothing ->
                                 if position == state.cursor then
                                     Nothing
+
                                 else
                                     Just state.cursor
                     , cursor = position
@@ -112,6 +115,7 @@ update buffer msg state =
                 , buffer
                 , Cmd.none
                 )
+
             else
                 ( state, buffer, Cmd.none )
 
@@ -131,8 +135,8 @@ update buffer msg state =
                                 Nothing ->
                                     state.cursor
                     in
-                        Position.previousColumn moveFrom
-                            |> Buffer.clampPosition Buffer.Backward buffer
+                    Position.previousColumn moveFrom
+                        |> Buffer.clampPosition Buffer.Backward buffer
                 , selection = Nothing
               }
             , buffer
@@ -152,8 +156,8 @@ update buffer msg state =
                                 Nothing ->
                                     state.cursor
                     in
-                        Position.nextColumn moveFrom
-                            |> Buffer.clampPosition Buffer.Forward buffer
+                    Position.nextColumn moveFrom
+                        |> Buffer.clampPosition Buffer.Forward buffer
                 , selection = Nothing
               }
             , buffer
@@ -173,8 +177,8 @@ update buffer msg state =
                                 Nothing ->
                                     state.cursor
                     in
-                        Position.previousLine moveFrom
-                            |> Buffer.clampPosition Buffer.Backward buffer
+                    Position.previousLine moveFrom
+                        |> Buffer.clampPosition Buffer.Backward buffer
                 , selection = Nothing
               }
             , buffer
@@ -194,8 +198,8 @@ update buffer msg state =
                                 Nothing ->
                                     state.cursor
                     in
-                        Position.nextLine moveFrom
-                            |> Buffer.clampPosition Buffer.Backward buffer
+                    Position.nextLine moveFrom
+                        |> Buffer.clampPosition Buffer.Backward buffer
                 , selection = Nothing
               }
             , buffer
@@ -215,15 +219,15 @@ update buffer msg state =
                                 Nothing ->
                                     state.cursor
                     in
-                        case Buffer.lineEnd moveFrom.line buffer of
-                            Just column ->
-                                Position.setColumn column state.cursor
+                    case Buffer.lineEnd moveFrom.line buffer of
+                        Just column ->
+                            Position.setColumn column state.cursor
 
-                            Nothing ->
-                                Buffer.clampPosition
-                                    Buffer.Backward
-                                    buffer
-                                    state.cursor
+                        Nothing ->
+                            Buffer.clampPosition
+                                Buffer.Backward
+                                buffer
+                                state.cursor
                 , selection = Nothing
               }
             , buffer
@@ -243,7 +247,7 @@ update buffer msg state =
                                 Nothing ->
                                     state.cursor
                     in
-                        Position.setColumn 0 moveFrom
+                    Position.setColumn 0 moveFrom
                 , selection = Nothing
               }
             , buffer
@@ -280,43 +284,46 @@ update buffer msg state =
                                 ++ Buffer.between start end buffer
                                 ++ closing
                     in
-                        ( { state
-                            | cursor =
-                                if state.cursor.line == start.line then
-                                    Position.nextColumn state.cursor
+                    ( { state
+                        | cursor =
+                            if state.cursor.line == start.line then
+                                Position.nextColumn state.cursor
+
+                            else
+                                state.cursor
+                        , selection =
+                            Just <|
+                                if selection.line == start.line then
+                                    Position.nextColumn selection
+
                                 else
-                                    state.cursor
-                            , selection =
-                                Just <|
-                                    if selection.line == start.line then
-                                        Position.nextColumn selection
-                                    else
-                                        selection
-                          }
-                        , Buffer.replace start end wrapped buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                                    selection
+                      }
+                    , Buffer.replace start end wrapped buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
                 ( Just selection, Nothing ) ->
                     let
                         ( start, end ) =
                             Position.order selection state.cursor
                     in
-                        ( { state
-                            | cursor =
-                                if string == "\n" then
-                                    { line = start.line + 1
-                                    , column = 0
-                                    }
-                                else
-                                    Position.nextColumn start
-                            , selection = Nothing
-                          }
-                        , Buffer.replace start end string buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor =
+                            if string == "\n" then
+                                { line = start.line + 1
+                                , column = 0
+                                }
+
+                            else
+                                Position.nextColumn start
+                        , selection = Nothing
+                      }
+                    , Buffer.replace start end string buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
                 ( Nothing, maybeClosing ) ->
                     let
@@ -327,20 +334,22 @@ update buffer msg state =
                             if not nearWordChar then
                                 Maybe.map ((++) string) maybeClosing
                                     |> Maybe.withDefault string
+
                             else
                                 string
                     in
-                        ( { state
-                            | cursor =
-                                if string == "\n" then
-                                    { line = state.cursor.line + 1, column = 0 }
-                                else
-                                    Position.nextColumn state.cursor
-                          }
-                        , Buffer.insert state.cursor insertString buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor =
+                            if string == "\n" then
+                                { line = state.cursor.line + 1, column = 0 }
+
+                            else
+                                Position.nextColumn state.cursor
+                      }
+                    , Buffer.insert state.cursor insertString buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
         RemoveCharAfter ->
             case state.selection of
@@ -349,14 +358,14 @@ update buffer msg state =
                         ( start, end ) =
                             Position.order selection state.cursor
                     in
-                        ( { state
-                            | cursor = start
-                            , selection = Nothing
-                          }
-                        , Buffer.replace start end "" buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor = start
+                        , selection = Nothing
+                      }
+                    , Buffer.replace start end "" buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
                 Nothing ->
                     ( state
@@ -376,14 +385,14 @@ update buffer msg state =
                         ( start, end ) =
                             Position.order selection state.cursor
                     in
-                        ( { state
-                            | cursor = start
-                            , selection = Nothing
-                          }
-                        , Buffer.replace start end "" buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor = start
+                        , selection = Nothing
+                      }
+                    , Buffer.replace start end "" buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
                 Nothing ->
                     ( { state
@@ -405,25 +414,25 @@ update buffer msg state =
                         ( start, end ) =
                             Position.order selection state.cursor
                     in
-                        ( { state
-                            | cursor = start
-                            , selection = Nothing
-                          }
-                        , Buffer.replace start end "" buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor = start
+                        , selection = Nothing
+                      }
+                    , Buffer.replace start end "" buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
                 Nothing ->
                     let
                         end =
                             Buffer.groupEnd state.cursor buffer
                     in
-                        ( state
-                        , Buffer.replace state.cursor end "" buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( state
+                    , Buffer.replace state.cursor end "" buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
         RemoveGroupBefore ->
             case state.selection of
@@ -432,25 +441,25 @@ update buffer msg state =
                         ( start, end ) =
                             Position.order selection state.cursor
                     in
-                        ( { state
-                            | cursor = start
-                            , selection = Nothing
-                          }
-                        , Buffer.replace start end "" buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor = start
+                        , selection = Nothing
+                      }
+                    , Buffer.replace start end "" buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
                 Nothing ->
                     let
                         start =
                             Buffer.groupStart state.cursor buffer
                     in
-                        ( { state | cursor = start }
-                        , Buffer.replace start state.cursor "" buffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state | cursor = start }
+                    , Buffer.replace start state.cursor "" buffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
         Indent ->
             case state.selection of
@@ -476,14 +485,14 @@ update buffer msg state =
                         ( indentedBuffer, indentedColumn ) =
                             Buffer.indentFrom state.cursor buffer
                     in
-                        ( { state
-                            | cursor =
-                                Position.setColumn indentedColumn state.cursor
-                          }
-                        , indentedBuffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor =
+                            Position.setColumn indentedColumn state.cursor
+                      }
+                    , indentedBuffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
         Deindent ->
             case state.selection of
@@ -492,31 +501,31 @@ update buffer msg state =
                         ( deindentedBuffer, cursorColumn, selectionColumn ) =
                             Buffer.deindentBetween state.cursor selection buffer
                     in
-                        ( { state
-                            | cursor =
-                                Position.setColumn cursorColumn state.cursor
-                            , selection =
-                                Just <|
-                                    Position.setColumn selectionColumn selection
-                          }
-                        , deindentedBuffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor =
+                            Position.setColumn cursorColumn state.cursor
+                        , selection =
+                            Just <|
+                                Position.setColumn selectionColumn selection
+                      }
+                    , deindentedBuffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
                 Nothing ->
                     let
                         ( deindentedBuffer, deindentedColumn ) =
                             Buffer.deindentFrom state.cursor buffer
                     in
-                        ( { state
-                            | cursor =
-                                Position.setColumn deindentedColumn state.cursor
-                          }
-                        , deindentedBuffer
-                        , Cmd.none
-                        )
-                            |> pushHistory state buffer
+                    ( { state
+                        | cursor =
+                            Position.setColumn deindentedColumn state.cursor
+                      }
+                    , deindentedBuffer
+                    , Cmd.none
+                    )
+                        |> pushHistory state buffer
 
         SelectUp ->
             let
@@ -524,22 +533,24 @@ update buffer msg state =
                     Position.previousLine state.cursor
                         |> Buffer.clampPosition Buffer.Backward buffer
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectDown ->
             let
@@ -547,22 +558,24 @@ update buffer msg state =
                     Position.nextLine state.cursor
                         |> Buffer.clampPosition Buffer.Backward buffer
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectLeft ->
             let
@@ -570,22 +583,24 @@ update buffer msg state =
                     Position.previousColumn state.cursor
                         |> Buffer.clampPosition Buffer.Backward buffer
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectRight ->
             let
@@ -593,44 +608,48 @@ update buffer msg state =
                     Position.nextColumn state.cursor
                         |> Buffer.clampPosition Buffer.Forward buffer
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectToLineStart ->
             let
                 cursor =
                     Position.setColumn 0 state.cursor
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectToLineEnd ->
             let
@@ -641,70 +660,76 @@ update buffer msg state =
                         )
                         state.cursor
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectToGroupStart ->
             let
                 cursor =
                     Buffer.groupStart state.cursor buffer
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectToGroupEnd ->
             let
                 cursor =
                     Buffer.groupEnd state.cursor buffer
             in
-                ( { state
-                    | cursor = cursor
-                    , selection =
-                        if state.selection == Just cursor then
-                            Nothing
-                        else if
-                            (state.selection == Nothing)
-                                && (state.cursor /= cursor)
-                        then
-                            Just state.cursor
-                        else
-                            state.selection
-                  }
-                , buffer
-                , Cmd.none
-                )
+            ( { state
+                | cursor = cursor
+                , selection =
+                    if state.selection == Just cursor then
+                        Nothing
+
+                    else if
+                        (state.selection == Nothing)
+                            && (state.cursor /= cursor)
+                    then
+                        Just state.cursor
+
+                    else
+                        state.selection
+              }
+            , buffer
+            , Cmd.none
+            )
 
         SelectAll ->
             ( { state
-                | cursor = Buffer.end buffer
+                | cursor = Buffer.lastPosition buffer
                 , selection = Just (Position 0 0)
               }
             , buffer
@@ -716,15 +741,15 @@ update buffer msg state =
                 range =
                     Buffer.groupRange state.cursor buffer
             in
-                case range of
-                    Just ( start, end ) ->
-                        ( { state | cursor = end, selection = Just start }
-                        , buffer
-                        , Cmd.none
-                        )
+            case range of
+                Just ( start, end ) ->
+                    ( { state | cursor = end, selection = Just start }
+                    , buffer
+                    , Cmd.none
+                    )
 
-                    Nothing ->
-                        ( state, buffer, Cmd.none )
+                Nothing ->
+                    ( state, buffer, Cmd.none )
 
         SelectLine ->
             ( { state
@@ -743,13 +768,13 @@ update buffer msg state =
 
         Undo ->
             case Editor.History.undo (historyState state buffer) state.history of
-                ( history, Just { cursor, selection, buffer } ) ->
+                ( history, Just snapshot ) ->
                     ( { state
-                        | cursor = cursor
-                        , selection = selection
+                        | cursor = snapshot.cursor
+                        , selection = snapshot.selection
                         , history = history
                       }
-                    , buffer
+                    , snapshot.buffer
                     , Cmd.none
                     )
 
@@ -758,13 +783,13 @@ update buffer msg state =
 
         Redo ->
             case Editor.History.redo (historyState state buffer) state.history of
-                ( history, Just { cursor, selection, buffer } ) ->
+                ( history, Just snapshot ) ->
                     ( { state
-                        | cursor = cursor
-                        , selection = selection
+                        | cursor = snapshot.cursor
+                        , selection = snapshot.selection
                         , history = history
                       }
-                    , buffer
+                    , snapshot.buffer
                     , Cmd.none
                     )
 

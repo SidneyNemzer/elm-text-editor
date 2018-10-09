@@ -1,7 +1,7 @@
 module Editor.Model exposing (InternalState)
 
-import Position exposing (Position)
 import Editor.History exposing (History)
+import Position exposing (Position)
 
 
 type alias InternalState =

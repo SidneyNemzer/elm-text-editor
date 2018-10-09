@@ -1,8 +1,8 @@
 module Editor.Keymap exposing (decoder)
 
 import Dict exposing (Dict)
-import Json.Decode as Decode exposing (Decoder)
 import Editor.Update exposing (Msg(..))
+import Json.Decode as Decode exposing (Decoder)
 
 
 type Modifier
@@ -132,15 +132,15 @@ keyToMsg event =
                         (Decode.fail "This key does nothing")
                 ]
     in
-        case modifier event.ctrl event.shift of
-            None ->
-                keyOrCharFrom keymaps.noModifier
+    case modifier event.ctrl event.shift of
+        None ->
+            keyOrCharFrom keymaps.noModifier
 
-            Control ->
-                keyFrom keymaps.control
+        Control ->
+            keyFrom keymaps.control
 
-            Shift ->
-                keyOrCharFrom keymaps.shift
+        Shift ->
+            keyOrCharFrom keymaps.shift
 
-            ControlAndShift ->
-                keyFrom keymaps.controlAndShift
+        ControlAndShift ->
+            keyFrom keymaps.controlAndShift

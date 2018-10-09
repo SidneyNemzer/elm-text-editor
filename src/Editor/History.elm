@@ -1,7 +1,7 @@
-module Editor.History exposing (History, State, empty, push, undo, redo)
+module Editor.History exposing (History, State, empty, push, redo, undo)
 
-import Position exposing (Position)
 import Buffer exposing (Buffer)
+import Position exposing (Position)
 
 
 type alias State =

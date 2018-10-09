@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "devDependencies": {
+    "elm": "^0.19.0-bugfix2",
+    "elm-format": "^0.8.1"
+  }
+}
