@@ -15,9 +15,7 @@ type Modifier
 type alias Keydown =
     { char : Maybe String
     , key : String
-    , ctrl : Bool
-    , shift : Bool
-    , alt : Bool
+    , modifier : Modifier
     }
 
 
@@ -37,24 +35,33 @@ modifier ctrl shift =
             None
 
 
-keydownDecoder : Decoder Keydown
-keydownDecoder =
-    Decode.map5 Keydown
-        (Decode.field "key" Decode.string
-            |> Decode.map
-                (\key ->
-                    case String.uncons key of
-                        Just ( char, "" ) ->
-                            Just (String.fromChar char)
-
-                        _ ->
-                            Nothing
-                )
-        )
-        (Decode.field "key" Decode.string)
+modifierDecoder : Decoder Modifier
+modifierDecoder =
+    Decode.map2 modifier
         (Decode.field "ctrlKey" Decode.bool)
         (Decode.field "shiftKey" Decode.bool)
-        (Decode.field "altKey" Decode.bool)
+
+
+characterDecoder : Decoder (Maybe String)
+characterDecoder =
+    Decode.field "key" Decode.string
+        |> Decode.map
+            (\key ->
+                case String.uncons key of
+                    Just ( char, "" ) ->
+                        Just (String.fromChar char)
+
+                    _ ->
+                        Nothing
+            )
+
+
+keydownDecoder : Decoder Keydown
+keydownDecoder =
+    Decode.map3 Keydown
+        characterDecoder
+        (Decode.field "key" Decode.string)
+        modifierDecoder
 
 
 decoder : Decoder Msg
@@ -132,7 +139,7 @@ keyToMsg event =
                         (Decode.fail "This key does nothing")
                 ]
     in
-    case modifier event.ctrl event.shift of
+    case event.modifier of
         None ->
             keyOrCharFrom keymaps.noModifier
 
