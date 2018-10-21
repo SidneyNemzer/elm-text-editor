@@ -46,13 +46,6 @@ init content =
     Buffer content
 
 
-listMapAt : (a -> a) -> Int -> List a -> List a
-listMapAt fn index list =
-    List.Extra.getAt index list
-        |> Maybe.map (\a -> List.Extra.setAt index (fn a) list)
-        |> Maybe.withDefault list
-
-
 indexFromPosition : String -> Position -> Maybe Int
 indexFromPosition buffer position =
     -- Doesn't validate columns, only lines
