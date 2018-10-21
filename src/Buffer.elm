@@ -81,9 +81,7 @@ nearWordChar position (Buffer buffer) =
                 in
                 Maybe.map isWordChar previousChar
                     |> Maybe.Extra.orElseLazy
-                        (\() ->
-                            Maybe.map isWordChar currentChar
-                        )
+                        (\() -> Maybe.map isWordChar currentChar)
             )
         |> Maybe.withDefault False
 
@@ -293,7 +291,7 @@ isWhitespace =
 
 isNonWordChar : Char -> Bool
 isNonWordChar =
-    String.fromChar >> (\b a -> String.contains a b) "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-…"
+    String.fromChar >> (\a -> String.contains a "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-…")
 
 
 isWordChar : Char -> Bool
@@ -339,39 +337,35 @@ groupHelp direction consumedNewline string position group =
         Just ( char, rest ) ->
             let
                 nextPosition changeLine =
-                    case direction of
-                        Forward ->
-                            if changeLine then
-                                Position (position.line + 1) 0
+                    case ( direction, changeLine ) of
+                        ( Forward, True ) ->
+                            Position (position.line + 1) 0
+
+                        ( Forward, False ) ->
+                            Position.nextColumn position
+
+                        ( Backward, True ) ->
+                            if String.contains "\n" rest then
+                                Position
+                                    (position.line - 1)
+                                    (String.Extra.rightOfBack "\n" rest
+                                        |> String.length
+                                    )
 
                             else
-                                Position.nextColumn position
+                                Position
+                                    (position.line - 1)
+                                    (String.length rest)
 
-                        Backward ->
-                            if changeLine then
-                                if String.contains "\n" rest then
-                                    Position
-                                        (position.line - 1)
-                                        (String.Extra.rightOfBack "\n" rest
-                                            |> String.length
-                                        )
-
-                                else
-                                    Position
-                                        (position.line - 1)
-                                        (String.length rest)
-
-                            else
-                                Position.previousColumn position
+                        ( Backward, False ) ->
+                            Position.previousColumn position
 
                 next nextConsumedNewline =
                     groupHelp
                         direction
                         nextConsumedNewline
                         rest
-                        (nextPosition
-                            (consumedNewline /= nextConsumedNewline)
-                        )
+                        (nextPosition (consumedNewline /= nextConsumedNewline))
             in
             case group of
                 None ->
