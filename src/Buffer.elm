@@ -24,7 +24,7 @@ module Buffer exposing
 
 {-| Manipulates a string using Positions. The string of characters is stored in
 the opaque type `Buffer`. Functions that take a range of positions will
-automatically sort the proided positions.
+automatically sort the provided positions.
 -}
 
 import Array exposing (Array)
