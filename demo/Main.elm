@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg(..), init, keyDecoder, main, subscriptions, update, view)
+module Main exposing (main)
 
 import Browser
 import Buffer exposing (Buffer)
