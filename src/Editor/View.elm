@@ -23,15 +23,18 @@ selected cursor maybeSelection char =
         |> Maybe.withDefault False
 
 
-nbsp : Char
-nbsp =
+{-| The non-breaking space character will not get whitespace-collapsed like a
+regular space.
+-}
+nonBreakingSpace : Char
+nonBreakingSpace =
     Char.fromCode 160
 
 
-ensureNbsp : Char -> Char
-ensureNbsp char =
+ensureNonBreakingSpace : Char -> Char
+ensureNonBreakingSpace char =
     if char == ' ' then
-        nbsp
+        nonBreakingSpace
 
     else
         char
@@ -58,14 +61,10 @@ captureOnMouseOver msg =
 
 character : Position -> Maybe Position -> Position -> Char -> Html Msg
 character cursor selection position char =
-    let
-        hasCursor =
-            cursor == position
-    in
     span
         [ classList
             [ ( name ++ "-line__character", True )
-            , ( name ++ "-line__character--has-cursor", hasCursor )
+            , ( name ++ "-line__character--has-cursor", cursor == position )
             , ( name ++ "-line__character--selected"
               , selected cursor selection position
               )
@@ -73,8 +72,8 @@ character cursor selection position char =
         , captureOnMouseDown (MouseDown position)
         , captureOnMouseOver (MouseOver position)
         ]
-        [ text <| String.fromChar <| ensureNbsp char
-        , if hasCursor then
+        [ text <| String.fromChar <| ensureNonBreakingSpace char
+        , if cursor == position then
             span [ class <| name ++ "-cursor" ] [ text " " ]
 
           else
@@ -103,7 +102,7 @@ line cursor selection number content =
                     , captureOnMouseDown (MouseDown { line = number, column = 0 })
                     , captureOnMouseOver (MouseOver { line = number, column = 0 })
                     ]
-                    [ text <| String.fromChar nbsp ]
+                    [ text <| String.fromChar nonBreakingSpace ]
               ]
             , List.indexedMap
                 (Position number >> character cursor selection)

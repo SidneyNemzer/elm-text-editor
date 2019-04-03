@@ -3,7 +3,7 @@ module Editor.Update exposing (Msg(..), update)
 import Buffer exposing (Buffer)
 import Dict exposing (Dict)
 import Editor.History
-import Editor.Model exposing (InternalState)
+import Editor.Model exposing (InternalState, Snapshot)
 import Position exposing (Position)
 
 
@@ -53,22 +53,22 @@ autoclose =
         ]
 
 
-historyState : InternalState -> Buffer -> Editor.History.State
-historyState { cursor, selection } buffer =
+stateToSnapshot : InternalState -> Buffer -> Snapshot
+stateToSnapshot { cursor, selection } buffer =
     { cursor = cursor, selection = selection, buffer = buffer }
 
 
-pushHistory :
+recordHistory :
     InternalState
     -> Buffer
     -> ( InternalState, Buffer, Cmd Msg )
     -> ( InternalState, Buffer, Cmd Msg )
-pushHistory oldState oldBuffer ( state, buffer, cmd ) =
+recordHistory oldState oldBuffer ( state, buffer, cmd ) =
     ( { state
         | history =
             if oldBuffer /= buffer then
                 Editor.History.push
-                    (historyState oldState oldBuffer)
+                    (stateToSnapshot oldState oldBuffer)
                     state.history
 
             else
@@ -302,7 +302,7 @@ update buffer msg state =
                     , Buffer.replace start end wrapped buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 ( Just selection, Nothing ) ->
                     let
@@ -323,7 +323,7 @@ update buffer msg state =
                     , Buffer.replace start end string buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 ( Nothing, maybeClosing ) ->
                     let
@@ -349,7 +349,7 @@ update buffer msg state =
                     , Buffer.insert state.cursor insertString buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
         RemoveCharAfter ->
             case state.selection of
@@ -365,7 +365,7 @@ update buffer msg state =
                     , Buffer.replace start end "" buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 Nothing ->
                     ( state
@@ -376,7 +376,7 @@ update buffer msg state =
                         buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
         RemoveCharBefore ->
             case state.selection of
@@ -392,7 +392,7 @@ update buffer msg state =
                     , Buffer.replace start end "" buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 Nothing ->
                     ( { state
@@ -405,7 +405,7 @@ update buffer msg state =
                     , Buffer.removeBefore state.cursor buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
         RemoveGroupAfter ->
             case state.selection of
@@ -421,7 +421,7 @@ update buffer msg state =
                     , Buffer.replace start end "" buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 Nothing ->
                     let
@@ -432,7 +432,7 @@ update buffer msg state =
                     , Buffer.replace state.cursor end "" buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
         RemoveGroupBefore ->
             case state.selection of
@@ -448,7 +448,7 @@ update buffer msg state =
                     , Buffer.replace start end "" buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 Nothing ->
                     let
@@ -459,7 +459,7 @@ update buffer msg state =
                     , Buffer.replace start state.cursor "" buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
         Indent ->
             case state.selection of
@@ -478,7 +478,7 @@ update buffer msg state =
                     , Buffer.indentBetween state.cursor selection buffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 Nothing ->
                     let
@@ -492,7 +492,7 @@ update buffer msg state =
                     , indentedBuffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
         Deindent ->
             case state.selection of
@@ -511,7 +511,7 @@ update buffer msg state =
                     , deindentedBuffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
                 Nothing ->
                     let
@@ -525,7 +525,7 @@ update buffer msg state =
                     , deindentedBuffer
                     , Cmd.none
                     )
-                        |> pushHistory state buffer
+                        |> recordHistory state buffer
 
         SelectUp ->
             let
@@ -767,8 +767,8 @@ update buffer msg state =
             )
 
         Undo ->
-            case Editor.History.undo (historyState state buffer) state.history of
-                ( history, Just snapshot ) ->
+            case Editor.History.undo (stateToSnapshot state buffer) state.history of
+                Just ( history, snapshot ) ->
                     ( { state
                         | cursor = snapshot.cursor
                         , selection = snapshot.selection
@@ -778,12 +778,12 @@ update buffer msg state =
                     , Cmd.none
                     )
 
-                ( _, Nothing ) ->
+                Nothing ->
                     ( state, buffer, Cmd.none )
 
         Redo ->
-            case Editor.History.redo (historyState state buffer) state.history of
-                ( history, Just snapshot ) ->
+            case Editor.History.redo (stateToSnapshot state buffer) state.history of
+                Just ( history, snapshot ) ->
                     ( { state
                         | cursor = snapshot.cursor
                         , selection = snapshot.selection
@@ -793,5 +793,5 @@ update buffer msg state =
                     , Cmd.none
                     )
 
-                ( _, Nothing ) ->
+                Nothing ->
                     ( state, buffer, Cmd.none )

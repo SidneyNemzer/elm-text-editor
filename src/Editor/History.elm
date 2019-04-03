@@ -1,15 +1,4 @@
-module Editor.History exposing (History, State, empty, push, redo, undo)
-
-import Buffer exposing (Buffer)
-import Position exposing (Position)
-
-
-type alias State =
-    { cursor : Position
-    , selection : Maybe Position
-    , buffer : Buffer
-    }
-
+module Editor.History exposing (History, empty, push, redo, undo)
 
 {-| Making changes adds entries to the past. Undoing a few times adds those
 entries to the future. Making another change adds a new entry to the past and
@@ -17,43 +6,47 @@ deletes the future. Redoing moves entries from the future to the past.
 Past entries are older at higher indexes, future entries are newer at higher
 indexes
 -}
-type alias InternalHistory =
-    { past : List State, future : List State }
 
 
-type History
-    = History InternalHistory
+type alias InternalHistory a =
+    { past : List a, future : List a }
 
 
-empty : History
+type History a
+    = History (InternalHistory a)
+
+
+empty : History a
 empty =
     History { past = [], future = [] }
 
 
-push : State -> History -> History
+push : a -> History a -> History a
 push entry (History history) =
     History { past = entry :: history.past, future = [] }
 
 
-undo : State -> History -> ( History, Maybe State )
+undo : a -> History a -> Maybe ( History a, a )
 undo current (History history) =
     case history.past of
         previous :: past ->
-            ( History { past = past, future = current :: history.future }
-            , Just previous
-            )
+            Just
+                ( History { past = past, future = current :: history.future }
+                , previous
+                )
 
         [] ->
-            ( History history, Nothing )
+            Nothing
 
 
-redo : State -> History -> ( History, Maybe State )
+redo : a -> History a -> Maybe ( History a, a )
 redo current (History history) =
     case history.future of
         next :: future ->
-            ( History { past = current :: history.past, future = future }
-            , Just next
-            )
+            Just
+                ( History { past = current :: history.past, future = future }
+                , next
+                )
 
         [] ->
-            ( History history, Nothing )
+            Nothing

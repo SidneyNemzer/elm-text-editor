@@ -22,6 +22,11 @@ module Buffer exposing
     , toString
     )
 
+{-| Manipulates a string using Positions. The string of characters is stored in
+the opaque type `Buffer`. Functions that take a range of positions will
+automatically sort the provided positions.
+-}
+
 import Array exposing (Array)
 import List.Extra
 import Maybe.Extra
@@ -46,13 +51,8 @@ init content =
     Buffer content
 
 
-listMapAt : (a -> a) -> Int -> List a -> List a
-listMapAt fn index list =
-    List.Extra.getAt index list
-        |> Maybe.map (\a -> List.Extra.setAt index (fn a) list)
-        |> Maybe.withDefault list
-
-
+{-| Internal function for getting the index of the position in a string
+-}
 indexFromPosition : String -> Position -> Maybe Int
 indexFromPosition buffer position =
     -- Doesn't validate columns, only lines
@@ -65,6 +65,8 @@ indexFromPosition buffer position =
             |> Maybe.map (\line -> line + position.column + 1)
 
 
+{-| Returns true if the Position is at or after a word character. See isWordChar.
+-}
 nearWordChar : Position -> Buffer -> Bool
 nearWordChar position (Buffer buffer) =
     indexFromPosition buffer position
@@ -79,9 +81,7 @@ nearWordChar position (Buffer buffer) =
                 in
                 Maybe.map isWordChar previousChar
                     |> Maybe.Extra.orElseLazy
-                        (\() ->
-                            Maybe.map isWordChar currentChar
-                        )
+                        (\() -> Maybe.map isWordChar currentChar)
             )
         |> Maybe.withDefault False
 
@@ -96,6 +96,8 @@ insert position string (Buffer buffer) =
         |> Buffer
 
 
+{-| Replace the string between two positions with a different string.
+-}
 replace : Position -> Position -> String -> Buffer -> Buffer
 replace pos1 pos2 string (Buffer buffer) =
     let
@@ -144,6 +146,8 @@ toString (Buffer buffer) =
     buffer
 
 
+{-| Returns a string of characters from between the positions
+-}
 between : Position -> Position -> Buffer -> String
 between pos1 pos2 (Buffer buffer) =
     let
@@ -206,8 +210,8 @@ indentBetween pos1 pos2 buffer =
             buffer
 
 
-{-| Deindent the given line. Returns the modified buffer and the column
-`minus - deindentedSize`. Unlike `indent`, `deindent` will deindent all the
+{-| Deindent the given line. Returns the modified buffer and the
+`column - deindentedSize`. Unlike `indent`, `deindent` will deindent all the
 content in the line, regardless of `position.column`. _Why not just accept a
 line then?_, you say. Well, the line might be close to the left, so it won't
 deindent the full `indentSize` -- in that case, it's important to know the new
@@ -243,6 +247,10 @@ deindentFrom { line, column } (Buffer buffer) =
         |> Maybe.withDefault ( Buffer buffer, column )
 
 
+{-| Deindents all the lines between the given positions. Returns the updated
+buffer and the new column of each position. The column doesn't always shift
+a full indent, if there isn't enough whitespace at the beginning of the line.
+-}
 deindentBetween : Position -> Position -> Buffer -> ( Buffer, Int, Int )
 deindentBetween pos1 pos2 buffer =
     let
@@ -283,7 +291,7 @@ isWhitespace =
 
 isNonWordChar : Char -> Bool
 isNonWordChar =
-    String.fromChar >> (\b a -> String.contains a b) "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-…"
+    String.fromChar >> (\a -> String.contains a "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-…")
 
 
 isWordChar : Char -> Bool
@@ -329,39 +337,35 @@ groupHelp direction consumedNewline string position group =
         Just ( char, rest ) ->
             let
                 nextPosition changeLine =
-                    case direction of
-                        Forward ->
-                            if changeLine then
-                                Position (position.line + 1) 0
+                    case ( direction, changeLine ) of
+                        ( Forward, True ) ->
+                            Position (position.line + 1) 0
+
+                        ( Forward, False ) ->
+                            Position.nextColumn position
+
+                        ( Backward, True ) ->
+                            if String.contains "\n" rest then
+                                Position
+                                    (position.line - 1)
+                                    (String.Extra.rightOfBack "\n" rest
+                                        |> String.length
+                                    )
 
                             else
-                                Position.nextColumn position
+                                Position
+                                    (position.line - 1)
+                                    (String.length rest)
 
-                        Backward ->
-                            if changeLine then
-                                if String.contains "\n" rest then
-                                    Position
-                                        (position.line - 1)
-                                        (String.Extra.rightOfBack "\n" rest
-                                            |> String.length
-                                        )
-
-                                else
-                                    Position
-                                        (position.line - 1)
-                                        (String.length rest)
-
-                            else
-                                Position.previousColumn position
+                        ( Backward, False ) ->
+                            Position.previousColumn position
 
                 next nextConsumedNewline =
                     groupHelp
                         direction
                         nextConsumedNewline
                         rest
-                        (nextPosition
-                            (consumedNewline /= nextConsumedNewline)
-                        )
+                        (nextPosition (consumedNewline /= nextConsumedNewline))
             in
             case group of
                 None ->
