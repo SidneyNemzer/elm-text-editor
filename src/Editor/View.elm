@@ -85,50 +85,42 @@ character cursor selection position char =
 line : Position -> Maybe Position -> Int -> String -> Html Msg
 line cursor selection number content =
     let
-        end =
-            Position number (String.length content)
+        length =
+            String.length content
 
-        start =
-            Position number 0
+        endPosition =
+            { line = number, column = length }
     in
     div
         [ class <| name ++ "-line"
-        , captureOnMouseDown (MouseDown end)
-        , captureOnMouseOver (MouseOver end)
+        , captureOnMouseDown (MouseDown endPosition)
+        , captureOnMouseOver (MouseOver endPosition)
         ]
-        [ span
-            [ class <| name ++ "-line__number"
-            , captureOnMouseDown (MouseDown start)
-            , captureOnMouseOver (MouseOver start)
-            ]
-            [ text <| String.fromInt (number + 1) ]
-        , span
-            [ class <| name ++ "-line__gutter-padding"
-            , captureOnMouseDown (MouseDown start)
-            , captureOnMouseOver (MouseOver start)
-            ]
-            [ text <| String.fromChar nbsp ]
-        , span [ class <| name ++ "-line__content" ]
-            (content
-                |> String.toList
-                |> List.indexedMap
-                    (character cursor selection << Position number)
-            )
-        , if
-            (cursor.line == number)
-                && (cursor.column >= String.length content)
-          then
-            span
-                [ class <| name ++ "-line__character"
-                , class <| name ++ "-line__character--has-cursor"
-                ]
-                [ text " "
-                , span [ class <| name ++ "-cursor" ] [ text " " ]
+    <|
+        List.concat
+            [ [ span
+                    [ class <| name ++ "-line__gutter-padding"
+                    , captureOnMouseDown (MouseDown { line = number, column = 0 })
+                    , captureOnMouseOver (MouseOver { line = number, column = 0 })
+                    ]
+                    [ text <| String.fromChar nbsp ]
+              ]
+            , List.indexedMap
+                (Position number >> character cursor selection)
+                (String.toList content)
+            , if cursor.line == number && cursor.column >= length then
+                [ span
+                    [ class <| name ++ "-line__character"
+                    , class <| name ++ "-line__character--has-cursor"
+                    ]
+                    [ text " "
+                    , span [ class <| name ++ "-cursor" ] [ text " " ]
+                    ]
                 ]
 
-          else
-            text ""
-        ]
+              else
+                []
+            ]
 
 
 onTripleClick : msg -> Attribute msg
@@ -147,6 +139,27 @@ onTripleClick msg =
         )
 
 
+lineNumber : Int -> Html Msg
+lineNumber number =
+    span
+        [ class <| name ++ "-line-number"
+        , captureOnMouseDown (MouseDown { line = number, column = 0 })
+        , captureOnMouseOver (MouseOver { line = number, column = 0 })
+        ]
+        [ text <| String.fromInt (number + 1) ]
+
+
+gutter : Int -> Html Msg
+gutter lineCount =
+    div [ class <| name ++ "-gutter" ] <|
+        List.map lineNumber (List.range 0 (lineCount - 1))
+
+
+linesContainer : List (Html Msg) -> Html Msg
+linesContainer =
+    div [ class <| name ++ "-lines" ]
+
+
 view : List String -> InternalState -> Html Msg
 view lines state =
     div
@@ -159,5 +172,7 @@ view lines state =
         , onTripleClick SelectLine
         , Attribute.tabindex 0
         ]
-    <|
-        List.indexedMap (line state.cursor state.selection) lines
+        [ gutter <| List.length lines
+        , linesContainer <|
+            List.indexedMap (line state.cursor state.selection) lines
+        ]

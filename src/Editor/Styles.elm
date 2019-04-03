@@ -16,23 +16,34 @@ styleText =
   border: 1px solid lightgray;
   width: 700px;
   user-select: none;
+  display: flex;
 }
 
 .elm-editor-container:focus {
   outline: none;
 }
 
-.elm-editor-line {
-  cursor: text;
+.elm-editor-gutter {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
-.elm-editor-line__number {
+.elm-editor-lines {
+  flex-grow: 1;
+}
+
+.elm-editor-line-number {
   display: inline-block;
   width: 20px;
   padding-right: 5px;
   text-align: right;
   background-color: lightgray;
   cursor: default;
+}
+
+.elm-editor-line {
+  cursor: text;
 }
 
 .elm-editor-line__gutter-padding {
