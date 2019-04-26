@@ -16,6 +16,7 @@ styleText =
   border: 1px solid lightgray;
   width: 700px;
   user-select: none;
+  -webkit-user-select: none;
   display: flex;
 }
 
